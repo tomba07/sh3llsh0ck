@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package chat;
 
-option go_package = "github.com/mirkoteschke/bombshell/proto/chat";
+option go_package = "github.com/tomba07/bombshell/proto/chat";
 
 service ChatService {
     rpc Join(JoinRequest) returns (JoinResponse);
