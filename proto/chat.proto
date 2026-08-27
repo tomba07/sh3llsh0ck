@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package chat;
+
+option go_package = "github.com/mirkoteschke/bombshell/proto/chat";
+
+service ChatService {
+    rpc Join(JoinRequest) returns (JoinResponse);
+    rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+}
+
+message JoinRequest {
+    string name = 1;
+}
+
+message JoinResponse {
+    string player_id = 1;
+}
+
+message SendMessageRequest {
+    string player_id = 1;
+    string message = 2;
+}
+
+message SendMessageResponse {
+    bool ok = 1;
+}

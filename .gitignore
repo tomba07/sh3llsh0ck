@@ -1,0 +1,34 @@
+# Binaries
+/shellfire
+/bombshell
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go build output
+/bin/
+/dist/
+
+# Go test artifacts
+*.test
+*.out
+coverage.html
+coverage.txt
+
+# Go module cache
+vendor/
+
+# Generated protobuf files
+*.pb.go
+*.pb.gw.go
+
+# macOS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
