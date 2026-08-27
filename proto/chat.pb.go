@@ -205,6 +205,94 @@ func (x *SendMessageResponse) GetOk() bool {
 	return false
 }
 
+type LeaveRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PlayerId      string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LeaveRequest) Reset() {
+	*x = LeaveRequest{}
+	mi := &file_proto_chat_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LeaveRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LeaveRequest) ProtoMessage() {}
+
+func (x *LeaveRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_chat_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LeaveRequest.ProtoReflect.Descriptor instead.
+func (*LeaveRequest) Descriptor() ([]byte, []int) {
+	return file_proto_chat_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *LeaveRequest) GetPlayerId() string {
+	if x != nil {
+		return x.PlayerId
+	}
+	return ""
+}
+
+type LeaveResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Ok            bool                   `protobuf:"varint,1,opt,name=ok,proto3" json:"ok,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LeaveResponse) Reset() {
+	*x = LeaveResponse{}
+	mi := &file_proto_chat_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LeaveResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LeaveResponse) ProtoMessage() {}
+
+func (x *LeaveResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_chat_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LeaveResponse.ProtoReflect.Descriptor instead.
+func (*LeaveResponse) Descriptor() ([]byte, []int) {
+	return file_proto_chat_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *LeaveResponse) GetOk() bool {
+	if x != nil {
+		return x.Ok
+	}
+	return false
+}
+
 var File_proto_chat_proto protoreflect.FileDescriptor
 
 const file_proto_chat_proto_rawDesc = "" +
@@ -218,10 +306,15 @@ const file_proto_chat_proto_rawDesc = "" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"%\n" +
 	"\x13SendMessageResponse\x12\x0e\n" +
-	"\x02ok\x18\x01 \x01(\bR\x02ok2\x80\x01\n" +
+	"\x02ok\x18\x01 \x01(\bR\x02ok\"+\n" +
+	"\fLeaveRequest\x12\x1b\n" +
+	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\"\x1f\n" +
+	"\rLeaveResponse\x12\x0e\n" +
+	"\x02ok\x18\x01 \x01(\bR\x02ok2\xb2\x01\n" +
 	"\vChatService\x12-\n" +
 	"\x04Join\x12\x11.chat.JoinRequest\x1a\x12.chat.JoinResponse\x12B\n" +
-	"\vSendMessage\x12\x18.chat.SendMessageRequest\x1a\x19.chat.SendMessageResponseB)Z'github.com/tomba07/bombshell/proto/chatb\x06proto3"
+	"\vSendMessage\x12\x18.chat.SendMessageRequest\x1a\x19.chat.SendMessageResponse\x120\n" +
+	"\x05Leave\x12\x12.chat.LeaveRequest\x1a\x13.chat.LeaveResponseB)Z'github.com/tomba07/bombshell/proto/chatb\x06proto3"
 
 var (
 	file_proto_chat_proto_rawDescOnce sync.Once
@@ -235,20 +328,24 @@ func file_proto_chat_proto_rawDescGZIP() []byte {
 	return file_proto_chat_proto_rawDescData
 }
 
-var file_proto_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_proto_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_proto_chat_proto_goTypes = []any{
 	(*JoinRequest)(nil),         // 0: chat.JoinRequest
 	(*JoinResponse)(nil),        // 1: chat.JoinResponse
 	(*SendMessageRequest)(nil),  // 2: chat.SendMessageRequest
 	(*SendMessageResponse)(nil), // 3: chat.SendMessageResponse
+	(*LeaveRequest)(nil),        // 4: chat.LeaveRequest
+	(*LeaveResponse)(nil),       // 5: chat.LeaveResponse
 }
 var file_proto_chat_proto_depIdxs = []int32{
 	0, // 0: chat.ChatService.Join:input_type -> chat.JoinRequest
 	2, // 1: chat.ChatService.SendMessage:input_type -> chat.SendMessageRequest
-	1, // 2: chat.ChatService.Join:output_type -> chat.JoinResponse
-	3, // 3: chat.ChatService.SendMessage:output_type -> chat.SendMessageResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	4, // 2: chat.ChatService.Leave:input_type -> chat.LeaveRequest
+	1, // 3: chat.ChatService.Join:output_type -> chat.JoinResponse
+	3, // 4: chat.ChatService.SendMessage:output_type -> chat.SendMessageResponse
+	5, // 5: chat.ChatService.Leave:output_type -> chat.LeaveResponse
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -265,7 +362,7 @@ func file_proto_chat_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_chat_proto_rawDesc), len(file_proto_chat_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

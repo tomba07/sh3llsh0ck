@@ -5,23 +5,32 @@ package chat;
 option go_package = "github.com/tomba07/bombshell/proto/chat";
 
 service ChatService {
-    rpc Join(JoinRequest) returns (JoinResponse);
-    rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+  rpc Join(JoinRequest) returns (JoinResponse);
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+  rpc Leave(LeaveRequest) returns (LeaveResponse);
 }
 
 message JoinRequest {
-    string name = 1;
+  string name = 1;
 }
 
 message JoinResponse {
-    string player_id = 1;
+  string player_id = 1;
 }
 
 message SendMessageRequest {
-    string player_id = 1;
-    string message = 2;
+  string player_id = 1;
+  string message = 2;
 }
 
 message SendMessageResponse {
-    bool ok = 1;
+  bool ok = 1;
+}
+
+message LeaveRequest {
+  string player_id = 1;
+}
+
+message LeaveResponse {
+  bool ok = 1;
 }
