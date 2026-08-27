@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	pb "github.com/tomba07/bombshell/proto"
 	"google.golang.org/grpc"
@@ -34,14 +36,22 @@ func main() {
 	)
 	check(err)
 
-	_, err = client.SendMessage(
-		context.Background(),
-		&pb.SendMessageRequest{
-			PlayerId: response.PlayerId,
-			Message:  "Hi from Alice!",
-		},
-	)
-	check(err)
+	scanner := bufio.NewScanner(os.Stdin)
 
 	fmt.Printf("Joined as %s\n", response.PlayerId)
+	fmt.Println("Type a message and press Enter:")
+
+	for scanner.Scan() {
+		message := scanner.Text()
+
+		_, err = client.SendMessage(
+			context.Background(),
+			&pb.SendMessageRequest{
+				PlayerId: response.PlayerId,
+				Message:  message,
+			},
+		)
+		check(err)
+	}
+	check(scanner.Err())
 }
