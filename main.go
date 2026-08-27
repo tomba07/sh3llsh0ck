@@ -1,4 +1,4 @@
-package shellfire
+package main
 
 import (
 	"context"
