@@ -33,6 +33,17 @@ func (s *server) SendMessage(
 	}, nil
 }
 
+func (s *server) Leave(
+	ctx context.Context,
+	req *pb.LeaveRequest,
+) (*pb.LeaveResponse, error) {
+	fmt.Printf("%s left\n", req.PlayerId)
+
+	return &pb.LeaveResponse{
+		Ok: true,
+	}, nil
+}
+
 func main() {
 	listener, err := net.Listen("tcp", ":50051")
 	if err != nil {

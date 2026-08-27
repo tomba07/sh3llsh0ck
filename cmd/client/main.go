@@ -36,6 +36,16 @@ func main() {
 	)
 	check(err)
 
+	defer func() {
+		_, err := client.Leave(
+			context.Background(),
+			&pb.LeaveRequest{
+				PlayerId: response.PlayerId,
+			},
+		)
+		check(err)
+	}()
+
 	scanner := bufio.NewScanner(os.Stdin)
 
 	fmt.Printf("Joined as %s\n", response.PlayerId)
