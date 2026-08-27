@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	pb "github.com/tomba07/bombshell/proto"
 	"google.golang.org/grpc"
@@ -35,6 +37,23 @@ func main() {
 		},
 	)
 	check(err)
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-sigChan
+
+		_, err := client.Leave(
+			context.Background(),
+			&pb.LeaveRequest{
+				PlayerId: response.PlayerId,
+			},
+		)
+		check(err)
+
+		os.Exit(0)
+	}()
 
 	defer func() {
 		_, err := client.Leave(
