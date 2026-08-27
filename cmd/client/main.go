@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -20,6 +19,23 @@ func check(err error) {
 	}
 }
 
+func leaveClient(client *Client) {
+	if err := client.Leave(); err != nil {
+		log.Printf("failed to leave: %v\n", err)
+	}
+}
+
+func handleShutdown(client *Client) {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-sigChan
+		leaveClient(client)
+		os.Exit(0)
+	}()
+}
+
 func main() {
 	conn, err := grpc.NewClient(
 		"localhost:50051",
@@ -28,59 +44,21 @@ func main() {
 	check(err)
 	defer conn.Close()
 
-	client := pb.NewChatServiceClient(conn)
+	client := &Client{
+		grpcClient: pb.NewChatServiceClient(conn),
+	}
+	check(client.Join("Alice"))
+	fmt.Printf("Joined as %s\n", client.playerID)
+	defer leaveClient(client)
 
-	response, err := client.Join(
-		context.Background(),
-		&pb.JoinRequest{
-			Name: "Alice",
-		},
-	)
-	check(err)
-
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-
-	go func() {
-		<-sigChan
-
-		_, err := client.Leave(
-			context.Background(),
-			&pb.LeaveRequest{
-				PlayerId: response.PlayerId,
-			},
-		)
-		check(err)
-
-		os.Exit(0)
-	}()
-
-	defer func() {
-		_, err := client.Leave(
-			context.Background(),
-			&pb.LeaveRequest{
-				PlayerId: response.PlayerId,
-			},
-		)
-		check(err)
-	}()
+	handleShutdown(client)
 
 	scanner := bufio.NewScanner(os.Stdin)
-
-	fmt.Printf("Joined as %s\n", response.PlayerId)
 	fmt.Println("Type a message and press Enter:")
 
 	for scanner.Scan() {
-		message := scanner.Text()
-
-		_, err = client.SendMessage(
-			context.Background(),
-			&pb.SendMessageRequest{
-				PlayerId: response.PlayerId,
-				Message:  message,
-			},
-		)
-		check(err)
+		check(client.SendMessage(scanner.Text()))
 	}
+
 	check(scanner.Err())
 }
