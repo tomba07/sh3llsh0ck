@@ -20,9 +20,6 @@ coverage.txt
 # Go module cache
 vendor/
 
-# Generated protobuf files
-*.pb.go
-*.pb.gw.go
 
 # macOS
 .DS_Store
