@@ -48,18 +48,25 @@ func (s *server) SendMessage(
 	req *pb.SendMessageRequest,
 ) (*pb.SendMessageResponse, error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	if _, joined := s.clients[req.PlayerId]; !joined {
+		s.mu.Unlock()
 		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
 	}
+
+	clients := make([]*client, 0, len(s.clients))
+	for _, client := range s.clients {
+		clients = append(clients, client)
+	}
+
+	s.mu.Unlock()
 
 	message := &pb.ServerMessage{
 		PlayerId: req.PlayerId,
 		Message:  req.Message,
 	}
 
-	for _, client := range s.clients {
+	for _, client := range clients {
 		client.messages <- message
 	}
 
