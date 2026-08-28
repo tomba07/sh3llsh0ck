@@ -20,7 +20,7 @@ type server struct {
 
 type client struct {
 	name     string
-	messages chan *pb.ServerMessage
+	messages chan *pb.Event
 }
 
 func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinResponse, error) {
@@ -33,7 +33,7 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 
 	s.clients[req.Name] = &client{
 		name:     req.Name,
-		messages: make(chan *pb.ServerMessage, 10),
+		messages: make(chan *pb.Event, 10),
 	}
 
 	fmt.Printf("%s joined\n", req.Name)
@@ -61,7 +61,8 @@ func (s *server) SendMessage(
 
 	s.mu.Unlock()
 
-	message := &pb.ServerMessage{
+	message := &pb.Event{
+		Type:     pb.EventType_EVENT_TYPE_CHAT,
 		PlayerId: req.PlayerId,
 		Message:  req.Message,
 	}

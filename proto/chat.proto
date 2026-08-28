@@ -9,7 +9,18 @@ service ChatService {
   rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
   rpc Leave(LeaveRequest) returns (LeaveResponse);
 
-  rpc Subscribe(SubscribeRequest) returns (stream ServerMessage);
+  rpc Subscribe(SubscribeRequest) returns (stream Event);
+}
+
+message Event {
+  EventType type = 1;
+  string player_id = 2;
+  string message = 3;
+}
+
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_CHAT = 1;
 }
 
 message JoinRequest {
@@ -39,9 +50,4 @@ message LeaveResponse {
 
 message SubscribeRequest {
   string player_id = 1;
-}
-
-message ServerMessage {
-  string player_id = 1;
-  string message = 2;
 }
