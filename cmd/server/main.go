@@ -39,6 +39,13 @@ func (s *server) SendMessage(
 	ctx context.Context,
 	req *pb.SendMessageRequest,
 ) (*pb.SendMessageResponse, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if !s.clients[req.PlayerId] {
+		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
+	}
+
 	fmt.Printf("[%s] %s\n", req.PlayerId, req.Message)
 
 	return &pb.SendMessageResponse{
