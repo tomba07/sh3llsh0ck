@@ -12,6 +12,19 @@ type Client struct {
 	playerID   string
 }
 
+func (c *Client) handleEvent(event *pb.Event) {
+	switch event.Type {
+	case pb.EventType_EVENT_TYPE_CHAT:
+		fmt.Printf("[%s] %s\n", event.PlayerId, event.Message)
+	case pb.EventType_EVENT_TYPE_PLAYER_JOINED:
+		fmt.Println(event.Message)
+	case pb.EventType_EVENT_TYPE_PLAYER_LEFT:
+		fmt.Println(event.Message)
+	default:
+		fmt.Printf("unknown event: %v\n", event.Type)
+	}
+}
+
 func (c *Client) Join(name string) error {
 	response, err := c.grpcClient.Join(
 		context.Background(),
@@ -68,11 +81,6 @@ func (c *Client) Subscribe() error {
 			return err
 		}
 
-		switch event.Type {
-		case pb.EventType_EVENT_TYPE_CHAT:
-			fmt.Printf("[%s] %s\n", event.PlayerId, event.Message)
-		default:
-			fmt.Printf("unknown event: %v\n", event.Type)
-		}
+		c.handleEvent(event)
 	}
 }
