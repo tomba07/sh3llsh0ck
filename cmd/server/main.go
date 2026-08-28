@@ -19,7 +19,8 @@ type server struct {
 }
 
 type client struct {
-	name string
+	name     string
+	messages chan *pb.ServerMessage
 }
 
 func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinResponse, error) {
@@ -31,7 +32,8 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 	}
 
 	s.clients[req.Name] = &client{
-		name: req.Name,
+		name:     req.Name,
+		messages: make(chan *pb.ServerMessage, 10),
 	}
 
 	fmt.Printf("%s joined\n", req.Name)
@@ -77,6 +79,32 @@ func (s *server) Leave(
 	return &pb.LeaveResponse{
 		Ok: true,
 	}, nil
+}
+
+func (s *server) Subscribe(
+	req *pb.SubscribeRequest,
+	stream pb.ChatService_SubscribeServer,
+) error {
+	s.mu.Lock()
+	client, joined := s.clients[req.PlayerId]
+	//don't use defer here due to the endless loop
+	s.mu.Unlock()
+
+	if !joined {
+		return fmt.Errorf("player %q is not joined", req.PlayerId)
+	}
+
+	for {
+		select {
+		case message := <-client.messages:
+			if err := stream.Send(message); err != nil {
+				return err
+			}
+
+		case <-stream.Context().Done():
+			return stream.Context().Err()
+		}
+	}
 }
 
 func main() {
