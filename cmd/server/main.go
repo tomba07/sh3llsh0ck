@@ -25,15 +25,34 @@ type client struct {
 
 func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinResponse, error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	if _, exists := s.clients[req.Name]; exists {
+		s.mu.Unlock()
 		return nil, fmt.Errorf("name %q already taken", req.Name)
 	}
 
 	s.clients[req.Name] = &client{
 		name:     req.Name,
 		messages: make(chan *pb.Event, 10),
+	}
+
+	clients := make([]*client, 0, len(s.clients))
+	for _, client := range s.clients {
+		clients = append(clients, client)
+	}
+
+	s.mu.Unlock()
+
+	message := fmt.Sprintf("%s joined", req.Name)
+
+	event := &pb.Event{
+		Type:     pb.EventType_EVENT_TYPE_PLAYER_JOINED,
+		PlayerId: req.Name,
+		Message:  message,
+	}
+
+	for _, client := range clients {
+		client.messages <- event
 	}
 
 	fmt.Printf("%s joined\n", req.Name)
