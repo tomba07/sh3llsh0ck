@@ -12,9 +12,13 @@ import (
 
 type server struct {
 	pb.UnimplementedChatServiceServer
+
+	clients map[string]bool
 }
 
 func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinResponse, error) {
+	s.clients[req.Name] = true
+
 	fmt.Printf("%s joined\n", req.Name)
 
 	return &pb.JoinResponse{
@@ -37,6 +41,8 @@ func (s *server) Leave(
 	ctx context.Context,
 	req *pb.LeaveRequest,
 ) (*pb.LeaveResponse, error) {
+	delete(s.clients, req.PlayerId)
+
 	fmt.Printf("%s left\n", req.PlayerId)
 
 	return &pb.LeaveResponse{
@@ -52,9 +58,13 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 
+	chatServer := &server{
+		clients: make(map[string]bool),
+	}
+
 	pb.RegisterChatServiceServer(
 		grpcServer,
-		&server{},
+		chatServer,
 	)
 
 	fmt.Println("Server listening on :50051")
