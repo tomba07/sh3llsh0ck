@@ -21,6 +21,8 @@ message Event {
 enum EventType {
   EVENT_TYPE_UNSPECIFIED = 0;
   EVENT_TYPE_CHAT = 1;
+  EVENT_TYPE_PLAYER_JOINED = 2;
+  EVENT_TYPE_PLAYER_LEFT = 3;
 }
 
 message JoinRequest {

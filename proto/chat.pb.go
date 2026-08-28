@@ -24,8 +24,10 @@ const (
 type EventType int32
 
 const (
-	EventType_EVENT_TYPE_UNSPECIFIED EventType = 0
-	EventType_EVENT_TYPE_CHAT        EventType = 1
+	EventType_EVENT_TYPE_UNSPECIFIED   EventType = 0
+	EventType_EVENT_TYPE_CHAT          EventType = 1
+	EventType_EVENT_TYPE_PLAYER_JOINED EventType = 2
+	EventType_EVENT_TYPE_PLAYER_LEFT   EventType = 3
 )
 
 // Enum value maps for EventType.
@@ -33,10 +35,14 @@ var (
 	EventType_name = map[int32]string{
 		0: "EVENT_TYPE_UNSPECIFIED",
 		1: "EVENT_TYPE_CHAT",
+		2: "EVENT_TYPE_PLAYER_JOINED",
+		3: "EVENT_TYPE_PLAYER_LEFT",
 	}
 	EventType_value = map[string]int32{
-		"EVENT_TYPE_UNSPECIFIED": 0,
-		"EVENT_TYPE_CHAT":        1,
+		"EVENT_TYPE_UNSPECIFIED":   0,
+		"EVENT_TYPE_CHAT":          1,
+		"EVENT_TYPE_PLAYER_JOINED": 2,
+		"EVENT_TYPE_PLAYER_LEFT":   3,
 	}
 )
 
@@ -466,10 +472,12 @@ const file_proto_chat_proto_rawDesc = "" +
 	"\rLeaveResponse\x12\x0e\n" +
 	"\x02ok\x18\x01 \x01(\bR\x02ok\"/\n" +
 	"\x10SubscribeRequest\x12\x1b\n" +
-	"\tplayer_id\x18\x01 \x01(\tR\bplayerId*<\n" +
+	"\tplayer_id\x18\x01 \x01(\tR\bplayerId*v\n" +
 	"\tEventType\x12\x1a\n" +
 	"\x16EVENT_TYPE_UNSPECIFIED\x10\x00\x12\x13\n" +
-	"\x0fEVENT_TYPE_CHAT\x10\x012\xe6\x01\n" +
+	"\x0fEVENT_TYPE_CHAT\x10\x01\x12\x1c\n" +
+	"\x18EVENT_TYPE_PLAYER_JOINED\x10\x02\x12\x1a\n" +
+	"\x16EVENT_TYPE_PLAYER_LEFT\x10\x032\xe6\x01\n" +
 	"\vChatService\x12-\n" +
 	"\x04Join\x12\x11.chat.JoinRequest\x1a\x12.chat.JoinResponse\x12B\n" +
 	"\vSendMessage\x12\x18.chat.SendMessageRequest\x1a\x19.chat.SendMessageResponse\x120\n" +
