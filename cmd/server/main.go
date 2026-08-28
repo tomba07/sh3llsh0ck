@@ -102,13 +102,32 @@ func (s *server) Leave(
 	req *pb.LeaveRequest,
 ) (*pb.LeaveResponse, error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	if _, joined := s.clients[req.PlayerId]; !joined {
+		s.mu.Unlock()
 		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
 	}
 
 	delete(s.clients, req.PlayerId)
+
+	clients := make([]*client, 0, len(s.clients))
+	for _, client := range s.clients {
+		clients = append(clients, client)
+	}
+
+	s.mu.Unlock()
+
+	message := fmt.Sprintf("%s left", req.PlayerId)
+
+	event := &pb.Event{
+		Type:     pb.EventType_EVENT_TYPE_PLAYER_LEFT,
+		PlayerId: req.PlayerId,
+		Message:  message,
+	}
+
+	for _, client := range clients {
+		client.messages <- event
+	}
 
 	fmt.Printf("%s left\n", req.PlayerId)
 
