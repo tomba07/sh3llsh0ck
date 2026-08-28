@@ -20,8 +20,13 @@ type server struct {
 
 func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinResponse, error) {
 	s.mu.Lock()
-	s.clients[req.Name] = true
 	defer s.mu.Unlock()
+
+	if s.clients[req.Name] {
+		return nil, fmt.Errorf("name %q already taken", req.Name)
+	}
+
+	s.clients[req.Name] = true
 
 	fmt.Printf("%s joined\n", req.Name)
 
@@ -46,8 +51,9 @@ func (s *server) Leave(
 	req *pb.LeaveRequest,
 ) (*pb.LeaveResponse, error) {
 	s.mu.Lock()
-	delete(s.clients, req.PlayerId)
 	defer s.mu.Unlock()
+
+	delete(s.clients, req.PlayerId)
 
 	fmt.Printf("%s left\n", req.PlayerId)
 
