@@ -15,18 +15,24 @@ type server struct {
 	pb.UnimplementedChatServiceServer
 
 	mu      sync.Mutex
-	clients map[string]bool
+	clients map[string]*client
+}
+
+type client struct {
+	name string
 }
 
 func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.clients[req.Name] {
+	if _, exists := s.clients[req.Name]; exists {
 		return nil, fmt.Errorf("name %q already taken", req.Name)
 	}
 
-	s.clients[req.Name] = true
+	s.clients[req.Name] = &client{
+		name: req.Name,
+	}
 
 	fmt.Printf("%s joined\n", req.Name)
 
@@ -42,7 +48,7 @@ func (s *server) SendMessage(
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if !s.clients[req.PlayerId] {
+	if _, joined := s.clients[req.PlayerId]; !joined {
 		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
 	}
 
@@ -59,6 +65,10 @@ func (s *server) Leave(
 ) (*pb.LeaveResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	if _, joined := s.clients[req.PlayerId]; !joined {
+		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
+	}
 
 	delete(s.clients, req.PlayerId)
 
@@ -78,7 +88,7 @@ func main() {
 	grpcServer := grpc.NewServer()
 
 	chatServer := &server{
-		clients: make(map[string]bool),
+		clients: make(map[string]*client),
 	}
 
 	pb.RegisterChatServiceServer(
