@@ -54,6 +54,15 @@ func (s *server) SendMessage(
 		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
 	}
 
+	message := &pb.ServerMessage{
+		PlayerId: req.PlayerId,
+		Message:  req.Message,
+	}
+
+	for _, client := range s.clients {
+		client.messages <- message
+	}
+
 	fmt.Printf("[%s] %s\n", req.PlayerId, req.Message)
 
 	return &pb.SendMessageResponse{
