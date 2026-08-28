@@ -293,6 +293,102 @@ func (x *LeaveResponse) GetOk() bool {
 	return false
 }
 
+type SubscribeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PlayerId      string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubscribeRequest) Reset() {
+	*x = SubscribeRequest{}
+	mi := &file_proto_chat_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubscribeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscribeRequest) ProtoMessage() {}
+
+func (x *SubscribeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_chat_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscribeRequest.ProtoReflect.Descriptor instead.
+func (*SubscribeRequest) Descriptor() ([]byte, []int) {
+	return file_proto_chat_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *SubscribeRequest) GetPlayerId() string {
+	if x != nil {
+		return x.PlayerId
+	}
+	return ""
+}
+
+type ServerMessage struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PlayerId      string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ServerMessage) Reset() {
+	*x = ServerMessage{}
+	mi := &file_proto_chat_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ServerMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ServerMessage) ProtoMessage() {}
+
+func (x *ServerMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_chat_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ServerMessage.ProtoReflect.Descriptor instead.
+func (*ServerMessage) Descriptor() ([]byte, []int) {
+	return file_proto_chat_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ServerMessage) GetPlayerId() string {
+	if x != nil {
+		return x.PlayerId
+	}
+	return ""
+}
+
+func (x *ServerMessage) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_proto_chat_proto protoreflect.FileDescriptor
 
 const file_proto_chat_proto_rawDesc = "" +
@@ -310,11 +406,17 @@ const file_proto_chat_proto_rawDesc = "" +
 	"\fLeaveRequest\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\"\x1f\n" +
 	"\rLeaveResponse\x12\x0e\n" +
-	"\x02ok\x18\x01 \x01(\bR\x02ok2\xb2\x01\n" +
+	"\x02ok\x18\x01 \x01(\bR\x02ok\"/\n" +
+	"\x10SubscribeRequest\x12\x1b\n" +
+	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\"F\n" +
+	"\rServerMessage\x12\x1b\n" +
+	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage2\xee\x01\n" +
 	"\vChatService\x12-\n" +
 	"\x04Join\x12\x11.chat.JoinRequest\x1a\x12.chat.JoinResponse\x12B\n" +
 	"\vSendMessage\x12\x18.chat.SendMessageRequest\x1a\x19.chat.SendMessageResponse\x120\n" +
-	"\x05Leave\x12\x12.chat.LeaveRequest\x1a\x13.chat.LeaveResponseB)Z'github.com/tomba07/bombshell/proto/chatb\x06proto3"
+	"\x05Leave\x12\x12.chat.LeaveRequest\x1a\x13.chat.LeaveResponse\x12:\n" +
+	"\tSubscribe\x12\x16.chat.SubscribeRequest\x1a\x13.chat.ServerMessage0\x01B)Z'github.com/tomba07/bombshell/proto/chatb\x06proto3"
 
 var (
 	file_proto_chat_proto_rawDescOnce sync.Once
@@ -328,7 +430,7 @@ func file_proto_chat_proto_rawDescGZIP() []byte {
 	return file_proto_chat_proto_rawDescData
 }
 
-var file_proto_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_proto_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_proto_chat_proto_goTypes = []any{
 	(*JoinRequest)(nil),         // 0: chat.JoinRequest
 	(*JoinResponse)(nil),        // 1: chat.JoinResponse
@@ -336,16 +438,20 @@ var file_proto_chat_proto_goTypes = []any{
 	(*SendMessageResponse)(nil), // 3: chat.SendMessageResponse
 	(*LeaveRequest)(nil),        // 4: chat.LeaveRequest
 	(*LeaveResponse)(nil),       // 5: chat.LeaveResponse
+	(*SubscribeRequest)(nil),    // 6: chat.SubscribeRequest
+	(*ServerMessage)(nil),       // 7: chat.ServerMessage
 }
 var file_proto_chat_proto_depIdxs = []int32{
 	0, // 0: chat.ChatService.Join:input_type -> chat.JoinRequest
 	2, // 1: chat.ChatService.SendMessage:input_type -> chat.SendMessageRequest
 	4, // 2: chat.ChatService.Leave:input_type -> chat.LeaveRequest
-	1, // 3: chat.ChatService.Join:output_type -> chat.JoinResponse
-	3, // 4: chat.ChatService.SendMessage:output_type -> chat.SendMessageResponse
-	5, // 5: chat.ChatService.Leave:output_type -> chat.LeaveResponse
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
+	6, // 3: chat.ChatService.Subscribe:input_type -> chat.SubscribeRequest
+	1, // 4: chat.ChatService.Join:output_type -> chat.JoinResponse
+	3, // 5: chat.ChatService.SendMessage:output_type -> chat.SendMessageResponse
+	5, // 6: chat.ChatService.Leave:output_type -> chat.LeaveResponse
+	7, // 7: chat.ChatService.Subscribe:output_type -> chat.ServerMessage
+	4, // [4:8] is the sub-list for method output_type
+	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -362,7 +468,7 @@ func file_proto_chat_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_chat_proto_rawDesc), len(file_proto_chat_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

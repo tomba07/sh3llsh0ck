@@ -22,6 +22,7 @@ const (
 	ChatService_Join_FullMethodName        = "/chat.ChatService/Join"
 	ChatService_SendMessage_FullMethodName = "/chat.ChatService/SendMessage"
 	ChatService_Leave_FullMethodName       = "/chat.ChatService/Leave"
+	ChatService_Subscribe_FullMethodName   = "/chat.ChatService/Subscribe"
 )
 
 // ChatServiceClient is the client API for ChatService service.
@@ -31,6 +32,7 @@ type ChatServiceClient interface {
 	Join(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*JoinResponse, error)
 	SendMessage(ctx context.Context, in *SendMessageRequest, opts ...grpc.CallOption) (*SendMessageResponse, error)
 	Leave(ctx context.Context, in *LeaveRequest, opts ...grpc.CallOption) (*LeaveResponse, error)
+	Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ServerMessage], error)
 }
 
 type chatServiceClient struct {
@@ -71,6 +73,25 @@ func (c *chatServiceClient) Leave(ctx context.Context, in *LeaveRequest, opts ..
 	return out, nil
 }
 
+func (c *chatServiceClient) Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ServerMessage], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &ChatService_ServiceDesc.Streams[0], ChatService_Subscribe_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[SubscribeRequest, ServerMessage]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ChatService_SubscribeClient = grpc.ServerStreamingClient[ServerMessage]
+
 // ChatServiceServer is the server API for ChatService service.
 // All implementations must embed UnimplementedChatServiceServer
 // for forward compatibility.
@@ -78,6 +99,7 @@ type ChatServiceServer interface {
 	Join(context.Context, *JoinRequest) (*JoinResponse, error)
 	SendMessage(context.Context, *SendMessageRequest) (*SendMessageResponse, error)
 	Leave(context.Context, *LeaveRequest) (*LeaveResponse, error)
+	Subscribe(*SubscribeRequest, grpc.ServerStreamingServer[ServerMessage]) error
 	mustEmbedUnimplementedChatServiceServer()
 }
 
@@ -96,6 +118,9 @@ func (UnimplementedChatServiceServer) SendMessage(context.Context, *SendMessageR
 }
 func (UnimplementedChatServiceServer) Leave(context.Context, *LeaveRequest) (*LeaveResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Leave not implemented")
+}
+func (UnimplementedChatServiceServer) Subscribe(*SubscribeRequest, grpc.ServerStreamingServer[ServerMessage]) error {
+	return status.Error(codes.Unimplemented, "method Subscribe not implemented")
 }
 func (UnimplementedChatServiceServer) mustEmbedUnimplementedChatServiceServer() {}
 func (UnimplementedChatServiceServer) testEmbeddedByValue()                     {}
@@ -172,6 +197,17 @@ func _ChatService_Leave_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChatService_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(SubscribeRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ChatServiceServer).Subscribe(m, &grpc.GenericServerStream[SubscribeRequest, ServerMessage]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ChatService_SubscribeServer = grpc.ServerStreamingServer[ServerMessage]
+
 // ChatService_ServiceDesc is the grpc.ServiceDesc for ChatService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -192,6 +228,12 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ChatService_Leave_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Subscribe",
+			Handler:       _ChatService_Subscribe_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "proto/chat.proto",
 }

@@ -8,6 +8,8 @@ service ChatService {
   rpc Join(JoinRequest) returns (JoinResponse);
   rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
   rpc Leave(LeaveRequest) returns (LeaveResponse);
+
+  rpc Subscribe(SubscribeRequest) returns (stream ServerMessage);
 }
 
 message JoinRequest {
@@ -33,4 +35,13 @@ message LeaveRequest {
 
 message LeaveResponse {
   bool ok = 1;
+}
+
+message SubscribeRequest {
+  string player_id = 1;
+}
+
+message ServerMessage {
+  string player_id = 1;
+  string message = 2;
 }
