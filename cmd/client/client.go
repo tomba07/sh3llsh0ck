@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	pb "github.com/tomba07/bombshell/proto"
 )
@@ -47,4 +48,26 @@ func (c *Client) Leave() error {
 	)
 
 	return err
+}
+
+func (c *Client) Subscribe() error {
+	stream, err := c.grpcClient.Subscribe(
+		context.Background(),
+		&pb.SubscribeRequest{
+			PlayerId: c.playerID,
+		},
+	)
+
+	if err != nil {
+		return err
+	}
+
+	for {
+		message, err := stream.Recv()
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("[%s] %s\n", message.PlayerId, message.Message)
+	}
 }

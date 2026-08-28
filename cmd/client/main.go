@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	pb "github.com/tomba07/bombshell/proto"
@@ -47,7 +48,22 @@ func main() {
 	client := &Client{
 		grpcClient: pb.NewChatServiceClient(conn),
 	}
-	check(client.Join("Alice"))
+
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Enter your name: ")
+
+	name, err := reader.ReadString('\n')
+	check(err)
+
+	name = strings.TrimSpace(name)
+
+	check(client.Join(name))
+	go func() {
+		if err := client.Subscribe(); err != nil {
+			log.Printf("subscribe ended %v\n", err)
+		}
+	}()
 	fmt.Printf("Joined as %s\n", client.playerID)
 	defer leaveClient(client)
 
