@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"sync"
 
 	pb "github.com/tomba07/bombshell/proto"
 	"google.golang.org/grpc"
@@ -13,11 +14,14 @@ import (
 type server struct {
 	pb.UnimplementedChatServiceServer
 
+	mu      sync.Mutex
 	clients map[string]bool
 }
 
 func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinResponse, error) {
+	s.mu.Lock()
 	s.clients[req.Name] = true
+	defer s.mu.Unlock()
 
 	fmt.Printf("%s joined\n", req.Name)
 
@@ -41,7 +45,9 @@ func (s *server) Leave(
 	ctx context.Context,
 	req *pb.LeaveRequest,
 ) (*pb.LeaveResponse, error) {
+	s.mu.Lock()
 	delete(s.clients, req.PlayerId)
+	defer s.mu.Unlock()
 
 	fmt.Printf("%s left\n", req.PlayerId)
 
