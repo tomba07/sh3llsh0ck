@@ -63,11 +63,16 @@ func (c *Client) Subscribe() error {
 	}
 
 	for {
-		message, err := stream.Recv()
+		event, err := stream.Recv()
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("[%s] %s\n", message.PlayerId, message.Message)
+		switch event.Type {
+		case pb.EventType_EVENT_TYPE_CHAT:
+			fmt.Printf("[%s] %s\n", event.PlayerId, event.Message)
+		default:
+			fmt.Printf("unknown event: %v\n", event.Type)
+		}
 	}
 }
