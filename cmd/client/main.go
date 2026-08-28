@@ -37,6 +37,24 @@ func handleShutdown(client *Client) {
 	}()
 }
 
+func readName(scanner *bufio.Scanner) string {
+	for {
+		fmt.Print("Enter your name: ")
+
+		if !scanner.Scan() {
+			check(scanner.Err())
+			log.Fatal("no name entered")
+		}
+
+		name := strings.TrimSpace(scanner.Text())
+		if name != "" {
+			return name
+		}
+
+		fmt.Println("Name cannot be empty.")
+	}
+}
+
 func main() {
 	conn, err := grpc.NewClient(
 		"localhost:50051",
@@ -49,16 +67,11 @@ func main() {
 		grpcClient: pb.NewChatServiceClient(conn),
 	}
 
-	reader := bufio.NewReader(os.Stdin)
+	scanner := bufio.NewScanner(os.Stdin)
 
-	fmt.Print("Enter your name: ")
-
-	name, err := reader.ReadString('\n')
-	check(err)
-
-	name = strings.TrimSpace(name)
-
+	name := readName(scanner)
 	check(client.Join(name))
+
 	go func() {
 		if err := client.Subscribe(); err != nil {
 			log.Printf("subscribe ended %v\n", err)
@@ -69,7 +82,6 @@ func main() {
 
 	handleShutdown(client)
 
-	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Println("Type a message and press Enter:")
 
 	for scanner.Scan() {
