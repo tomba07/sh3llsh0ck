@@ -137,6 +137,8 @@ type Event struct {
 	PlayerId      string                 `protobuf:"bytes,2,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
 	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	Direction     Direction              `protobuf:"varint,4,opt,name=direction,proto3,enum=chat.Direction" json:"direction,omitempty"`
+	X             int32                  `protobuf:"varint,5,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,6,opt,name=y,proto3" json:"y,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -197,6 +199,20 @@ func (x *Event) GetDirection() Direction {
 		return x.Direction
 	}
 	return Direction_DIRECTION_UNSPECIFIED
+}
+
+func (x *Event) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *Event) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
 }
 
 type JoinRequest struct {
@@ -615,12 +631,14 @@ var File_proto_chat_proto protoreflect.FileDescriptor
 
 const file_proto_chat_proto_rawDesc = "" +
 	"\n" +
-	"\x10proto/chat.proto\x12\x04chat\"\x92\x01\n" +
+	"\x10proto/chat.proto\x12\x04chat\"\xae\x01\n" +
 	"\x05Event\x12#\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x0f.chat.EventTypeR\x04type\x12\x1b\n" +
 	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\x12\x18\n" +
 	"\amessage\x18\x03 \x01(\tR\amessage\x12-\n" +
-	"\tdirection\x18\x04 \x01(\x0e2\x0f.chat.DirectionR\tdirection\"!\n" +
+	"\tdirection\x18\x04 \x01(\x0e2\x0f.chat.DirectionR\tdirection\x12\f\n" +
+	"\x01x\x18\x05 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x06 \x01(\x05R\x01y\"!\n" +
 	"\vJoinRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\"+\n" +
 	"\fJoinResponse\x12\x1b\n" +

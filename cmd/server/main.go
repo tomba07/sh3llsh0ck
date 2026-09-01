@@ -16,11 +16,23 @@ type server struct {
 
 	mu      sync.Mutex
 	clients map[string]*client
+	game    gameState
 }
 
 type client struct {
 	name     string
 	messages chan *pb.Event
+}
+
+type position struct {
+	x int
+	y int
+}
+
+type gameState struct {
+	width     int
+	height    int
+	positions map[string]position
 }
 
 func (s *server) getClient(playerID string) (*client, bool) {
@@ -67,6 +79,11 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 		clients = append(clients, client)
 	}
 
+	s.game.positions[req.Name] = position{
+		x: 1,
+		y: 1,
+	}
+
 	s.mu.Unlock()
 
 	message := fmt.Sprintf("%s joined", req.Name)
@@ -90,19 +107,43 @@ func (s *server) Move(
 	ctx context.Context,
 	req *pb.MoveRequest,
 ) (*pb.MoveResponse, error) {
-	if _, joined := s.getClient(req.PlayerId); !joined {
+	s.mu.Lock()
+
+	pos, joined := s.game.positions[req.PlayerId]
+	if !joined {
+		s.mu.Unlock()
 		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
 	}
+
+	switch req.Direction {
+	case pb.Direction_DIRECTION_UP:
+		pos.y--
+	case pb.Direction_DIRECTION_DOWN:
+		pos.y++
+	case pb.Direction_DIRECTION_LEFT:
+		pos.x--
+	case pb.Direction_DIRECTION_RIGHT:
+		pos.x++
+	}
+
+	s.game.positions[req.PlayerId] = pos
+
+	clients := make([]*client, 0, len(s.clients))
+	for _, client := range s.clients {
+		clients = append(clients, client)
+	}
+
+	s.mu.Unlock()
 
 	event := &pb.Event{
 		Type:      pb.EventType_EVENT_TYPE_MOVE,
 		PlayerId:  req.PlayerId,
 		Direction: req.Direction,
+		X:         int32(pos.x),
+		Y:         int32(pos.y),
 	}
 
-	broadcast(s.snapshotClients(), event)
-
-	fmt.Printf("%s moved %v\n", req.PlayerId, req.Direction)
+	broadcast(clients, event)
 
 	return &pb.MoveResponse{Ok: true}, nil
 }
@@ -145,6 +186,8 @@ func (s *server) Leave(
 	for _, client := range s.clients {
 		clients = append(clients, client)
 	}
+
+	delete(s.game.positions, req.PlayerId)
 
 	s.mu.Unlock()
 
@@ -197,6 +240,11 @@ func main() {
 
 	chatServer := &server{
 		clients: make(map[string]*client),
+		game: gameState{
+			width:     10,
+			height:    10,
+			positions: make(map[string]position),
+		},
 	}
 
 	pb.RegisterChatServiceServer(
