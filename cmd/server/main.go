@@ -23,6 +23,32 @@ type client struct {
 	messages chan *pb.Event
 }
 
+func (s *server) getClient(playerID string) (*client, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	client, joined := s.clients[playerID]
+	return client, joined
+}
+
+func (s *server) snapshotClients() []*client {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	clients := make([]*client, 0, len(s.clients))
+	for _, client := range s.clients {
+		clients = append(clients, client)
+	}
+
+	return clients
+}
+
+func broadcast(clients []*client, event *pb.Event) {
+	for _, client := range clients {
+		client.messages <- event
+	}
+}
+
 func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinResponse, error) {
 	s.mu.Lock()
 
@@ -51,9 +77,7 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 		Message:  message,
 	}
 
-	for _, client := range clients {
-		client.messages <- event
-	}
+	broadcast(clients, event)
 
 	fmt.Printf("%s joined\n", req.Name)
 
@@ -66,19 +90,9 @@ func (s *server) Move(
 	ctx context.Context,
 	req *pb.MoveRequest,
 ) (*pb.MoveResponse, error) {
-	s.mu.Lock()
-
-	if _, joined := s.clients[req.PlayerId]; !joined {
-		s.mu.Unlock()
+	if _, joined := s.getClient(req.PlayerId); !joined {
 		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
 	}
-
-	clients := make([]*client, 0, len(s.clients))
-	for _, client := range s.clients {
-		clients = append(clients, client)
-	}
-
-	s.mu.Unlock()
 
 	event := &pb.Event{
 		Type:      pb.EventType_EVENT_TYPE_MOVE,
@@ -86,50 +100,32 @@ func (s *server) Move(
 		Direction: req.Direction,
 	}
 
-	for _, client := range clients {
-		client.messages <- event
-	}
+	broadcast(s.snapshotClients(), event)
 
 	fmt.Printf("%s moved %v\n", req.PlayerId, req.Direction)
 
-	return &pb.MoveResponse{
-		Ok: true,
-	}, nil
+	return &pb.MoveResponse{Ok: true}, nil
 }
 
 func (s *server) SendMessage(
 	ctx context.Context,
 	req *pb.SendMessageRequest,
 ) (*pb.SendMessageResponse, error) {
-	s.mu.Lock()
-
-	if _, joined := s.clients[req.PlayerId]; !joined {
-		s.mu.Unlock()
+	if _, joined := s.getClient(req.PlayerId); !joined {
 		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
 	}
 
-	clients := make([]*client, 0, len(s.clients))
-	for _, client := range s.clients {
-		clients = append(clients, client)
-	}
-
-	s.mu.Unlock()
-
-	message := &pb.Event{
+	event := &pb.Event{
 		Type:     pb.EventType_EVENT_TYPE_CHAT,
 		PlayerId: req.PlayerId,
 		Message:  req.Message,
 	}
 
-	for _, client := range clients {
-		client.messages <- message
-	}
+	broadcast(s.snapshotClients(), event)
 
 	fmt.Printf("[%s] %s\n", req.PlayerId, req.Message)
 
-	return &pb.SendMessageResponse{
-		Ok: true,
-	}, nil
+	return &pb.SendMessageResponse{Ok: true}, nil
 }
 
 func (s *server) Leave(
@@ -160,9 +156,7 @@ func (s *server) Leave(
 		Message:  message,
 	}
 
-	for _, client := range clients {
-		client.messages <- event
-	}
+	broadcast(clients, event)
 
 	fmt.Printf("%s left\n", req.PlayerId)
 
@@ -175,11 +169,7 @@ func (s *server) Subscribe(
 	req *pb.SubscribeRequest,
 	stream pb.ChatService_SubscribeServer,
 ) error {
-	s.mu.Lock()
-	client, joined := s.clients[req.PlayerId]
-	//don't use defer here due to the endless loop
-	s.mu.Unlock()
-
+	client, joined := s.getClient(req.PlayerId)
 	if !joined {
 		return fmt.Errorf("player %q is not joined", req.PlayerId)
 	}
