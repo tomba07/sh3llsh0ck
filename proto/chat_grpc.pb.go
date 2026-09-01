@@ -22,6 +22,7 @@ const (
 	ChatService_Join_FullMethodName        = "/chat.ChatService/Join"
 	ChatService_SendMessage_FullMethodName = "/chat.ChatService/SendMessage"
 	ChatService_Leave_FullMethodName       = "/chat.ChatService/Leave"
+	ChatService_Move_FullMethodName        = "/chat.ChatService/Move"
 	ChatService_Subscribe_FullMethodName   = "/chat.ChatService/Subscribe"
 )
 
@@ -32,6 +33,7 @@ type ChatServiceClient interface {
 	Join(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*JoinResponse, error)
 	SendMessage(ctx context.Context, in *SendMessageRequest, opts ...grpc.CallOption) (*SendMessageResponse, error)
 	Leave(ctx context.Context, in *LeaveRequest, opts ...grpc.CallOption) (*LeaveResponse, error)
+	Move(ctx context.Context, in *MoveRequest, opts ...grpc.CallOption) (*MoveResponse, error)
 	Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Event], error)
 }
 
@@ -73,6 +75,16 @@ func (c *chatServiceClient) Leave(ctx context.Context, in *LeaveRequest, opts ..
 	return out, nil
 }
 
+func (c *chatServiceClient) Move(ctx context.Context, in *MoveRequest, opts ...grpc.CallOption) (*MoveResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MoveResponse)
+	err := c.cc.Invoke(ctx, ChatService_Move_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *chatServiceClient) Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Event], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &ChatService_ServiceDesc.Streams[0], ChatService_Subscribe_FullMethodName, cOpts...)
@@ -99,6 +111,7 @@ type ChatServiceServer interface {
 	Join(context.Context, *JoinRequest) (*JoinResponse, error)
 	SendMessage(context.Context, *SendMessageRequest) (*SendMessageResponse, error)
 	Leave(context.Context, *LeaveRequest) (*LeaveResponse, error)
+	Move(context.Context, *MoveRequest) (*MoveResponse, error)
 	Subscribe(*SubscribeRequest, grpc.ServerStreamingServer[Event]) error
 	mustEmbedUnimplementedChatServiceServer()
 }
@@ -118,6 +131,9 @@ func (UnimplementedChatServiceServer) SendMessage(context.Context, *SendMessageR
 }
 func (UnimplementedChatServiceServer) Leave(context.Context, *LeaveRequest) (*LeaveResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Leave not implemented")
+}
+func (UnimplementedChatServiceServer) Move(context.Context, *MoveRequest) (*MoveResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Move not implemented")
 }
 func (UnimplementedChatServiceServer) Subscribe(*SubscribeRequest, grpc.ServerStreamingServer[Event]) error {
 	return status.Error(codes.Unimplemented, "method Subscribe not implemented")
@@ -197,6 +213,24 @@ func _ChatService_Leave_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChatService_Move_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MoveRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).Move(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_Move_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).Move(ctx, req.(*MoveRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ChatService_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(SubscribeRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -226,6 +260,10 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Leave",
 			Handler:    _ChatService_Leave_Handler,
+		},
+		{
+			MethodName: "Move",
+			Handler:    _ChatService_Move_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

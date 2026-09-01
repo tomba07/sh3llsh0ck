@@ -28,6 +28,7 @@ const (
 	EventType_EVENT_TYPE_CHAT          EventType = 1
 	EventType_EVENT_TYPE_PLAYER_JOINED EventType = 2
 	EventType_EVENT_TYPE_PLAYER_LEFT   EventType = 3
+	EventType_EVENT_TYPE_MOVE          EventType = 4
 )
 
 // Enum value maps for EventType.
@@ -37,12 +38,14 @@ var (
 		1: "EVENT_TYPE_CHAT",
 		2: "EVENT_TYPE_PLAYER_JOINED",
 		3: "EVENT_TYPE_PLAYER_LEFT",
+		4: "EVENT_TYPE_MOVE",
 	}
 	EventType_value = map[string]int32{
 		"EVENT_TYPE_UNSPECIFIED":   0,
 		"EVENT_TYPE_CHAT":          1,
 		"EVENT_TYPE_PLAYER_JOINED": 2,
 		"EVENT_TYPE_PLAYER_LEFT":   3,
+		"EVENT_TYPE_MOVE":          4,
 	}
 )
 
@@ -73,11 +76,67 @@ func (EventType) EnumDescriptor() ([]byte, []int) {
 	return file_proto_chat_proto_rawDescGZIP(), []int{0}
 }
 
+type Direction int32
+
+const (
+	Direction_DIRECTION_UNSPECIFIED Direction = 0
+	Direction_DIRECTION_UP          Direction = 1
+	Direction_DIRECTION_DOWN        Direction = 2
+	Direction_DIRECTION_LEFT        Direction = 3
+	Direction_DIRECTION_RIGHT       Direction = 4
+)
+
+// Enum value maps for Direction.
+var (
+	Direction_name = map[int32]string{
+		0: "DIRECTION_UNSPECIFIED",
+		1: "DIRECTION_UP",
+		2: "DIRECTION_DOWN",
+		3: "DIRECTION_LEFT",
+		4: "DIRECTION_RIGHT",
+	}
+	Direction_value = map[string]int32{
+		"DIRECTION_UNSPECIFIED": 0,
+		"DIRECTION_UP":          1,
+		"DIRECTION_DOWN":        2,
+		"DIRECTION_LEFT":        3,
+		"DIRECTION_RIGHT":       4,
+	}
+)
+
+func (x Direction) Enum() *Direction {
+	p := new(Direction)
+	*p = x
+	return p
+}
+
+func (x Direction) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Direction) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_chat_proto_enumTypes[1].Descriptor()
+}
+
+func (Direction) Type() protoreflect.EnumType {
+	return &file_proto_chat_proto_enumTypes[1]
+}
+
+func (x Direction) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Direction.Descriptor instead.
+func (Direction) EnumDescriptor() ([]byte, []int) {
+	return file_proto_chat_proto_rawDescGZIP(), []int{1}
+}
+
 type Event struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Type          EventType              `protobuf:"varint,1,opt,name=type,proto3,enum=chat.EventType" json:"type,omitempty"`
 	PlayerId      string                 `protobuf:"bytes,2,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
 	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	Direction     Direction              `protobuf:"varint,4,opt,name=direction,proto3,enum=chat.Direction" json:"direction,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -131,6 +190,13 @@ func (x *Event) GetMessage() string {
 		return x.Message
 	}
 	return ""
+}
+
+func (x *Event) GetDirection() Direction {
+	if x != nil {
+		return x.Direction
+	}
+	return Direction_DIRECTION_UNSPECIFIED
 }
 
 type JoinRequest struct {
@@ -449,15 +515,112 @@ func (x *SubscribeRequest) GetPlayerId() string {
 	return ""
 }
 
+type MoveRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PlayerId      string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	Direction     Direction              `protobuf:"varint,2,opt,name=direction,proto3,enum=chat.Direction" json:"direction,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MoveRequest) Reset() {
+	*x = MoveRequest{}
+	mi := &file_proto_chat_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MoveRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MoveRequest) ProtoMessage() {}
+
+func (x *MoveRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_chat_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MoveRequest.ProtoReflect.Descriptor instead.
+func (*MoveRequest) Descriptor() ([]byte, []int) {
+	return file_proto_chat_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *MoveRequest) GetPlayerId() string {
+	if x != nil {
+		return x.PlayerId
+	}
+	return ""
+}
+
+func (x *MoveRequest) GetDirection() Direction {
+	if x != nil {
+		return x.Direction
+	}
+	return Direction_DIRECTION_UNSPECIFIED
+}
+
+type MoveResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Ok            bool                   `protobuf:"varint,1,opt,name=ok,proto3" json:"ok,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MoveResponse) Reset() {
+	*x = MoveResponse{}
+	mi := &file_proto_chat_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MoveResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MoveResponse) ProtoMessage() {}
+
+func (x *MoveResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_chat_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MoveResponse.ProtoReflect.Descriptor instead.
+func (*MoveResponse) Descriptor() ([]byte, []int) {
+	return file_proto_chat_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *MoveResponse) GetOk() bool {
+	if x != nil {
+		return x.Ok
+	}
+	return false
+}
+
 var File_proto_chat_proto protoreflect.FileDescriptor
 
 const file_proto_chat_proto_rawDesc = "" +
 	"\n" +
-	"\x10proto/chat.proto\x12\x04chat\"c\n" +
+	"\x10proto/chat.proto\x12\x04chat\"\x92\x01\n" +
 	"\x05Event\x12#\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x0f.chat.EventTypeR\x04type\x12\x1b\n" +
 	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\x12\x18\n" +
-	"\amessage\x18\x03 \x01(\tR\amessage\"!\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\x12-\n" +
+	"\tdirection\x18\x04 \x01(\x0e2\x0f.chat.DirectionR\tdirection\"!\n" +
 	"\vJoinRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\"+\n" +
 	"\fJoinResponse\x12\x1b\n" +
@@ -472,16 +635,29 @@ const file_proto_chat_proto_rawDesc = "" +
 	"\rLeaveResponse\x12\x0e\n" +
 	"\x02ok\x18\x01 \x01(\bR\x02ok\"/\n" +
 	"\x10SubscribeRequest\x12\x1b\n" +
-	"\tplayer_id\x18\x01 \x01(\tR\bplayerId*v\n" +
+	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\"Y\n" +
+	"\vMoveRequest\x12\x1b\n" +
+	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12-\n" +
+	"\tdirection\x18\x02 \x01(\x0e2\x0f.chat.DirectionR\tdirection\"\x1e\n" +
+	"\fMoveResponse\x12\x0e\n" +
+	"\x02ok\x18\x01 \x01(\bR\x02ok*\x8b\x01\n" +
 	"\tEventType\x12\x1a\n" +
 	"\x16EVENT_TYPE_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fEVENT_TYPE_CHAT\x10\x01\x12\x1c\n" +
 	"\x18EVENT_TYPE_PLAYER_JOINED\x10\x02\x12\x1a\n" +
-	"\x16EVENT_TYPE_PLAYER_LEFT\x10\x032\xe6\x01\n" +
+	"\x16EVENT_TYPE_PLAYER_LEFT\x10\x03\x12\x13\n" +
+	"\x0fEVENT_TYPE_MOVE\x10\x04*u\n" +
+	"\tDirection\x12\x19\n" +
+	"\x15DIRECTION_UNSPECIFIED\x10\x00\x12\x10\n" +
+	"\fDIRECTION_UP\x10\x01\x12\x12\n" +
+	"\x0eDIRECTION_DOWN\x10\x02\x12\x12\n" +
+	"\x0eDIRECTION_LEFT\x10\x03\x12\x13\n" +
+	"\x0fDIRECTION_RIGHT\x10\x042\x95\x02\n" +
 	"\vChatService\x12-\n" +
 	"\x04Join\x12\x11.chat.JoinRequest\x1a\x12.chat.JoinResponse\x12B\n" +
 	"\vSendMessage\x12\x18.chat.SendMessageRequest\x1a\x19.chat.SendMessageResponse\x120\n" +
-	"\x05Leave\x12\x12.chat.LeaveRequest\x1a\x13.chat.LeaveResponse\x122\n" +
+	"\x05Leave\x12\x12.chat.LeaveRequest\x1a\x13.chat.LeaveResponse\x12-\n" +
+	"\x04Move\x12\x11.chat.MoveRequest\x1a\x12.chat.MoveResponse\x122\n" +
 	"\tSubscribe\x12\x16.chat.SubscribeRequest\x1a\v.chat.Event0\x01B)Z'github.com/tomba07/bombshell/proto/chatb\x06proto3"
 
 var (
@@ -496,34 +672,41 @@ func file_proto_chat_proto_rawDescGZIP() []byte {
 	return file_proto_chat_proto_rawDescData
 }
 
-var file_proto_chat_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_proto_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_proto_chat_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_proto_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_proto_chat_proto_goTypes = []any{
 	(EventType)(0),              // 0: chat.EventType
-	(*Event)(nil),               // 1: chat.Event
-	(*JoinRequest)(nil),         // 2: chat.JoinRequest
-	(*JoinResponse)(nil),        // 3: chat.JoinResponse
-	(*SendMessageRequest)(nil),  // 4: chat.SendMessageRequest
-	(*SendMessageResponse)(nil), // 5: chat.SendMessageResponse
-	(*LeaveRequest)(nil),        // 6: chat.LeaveRequest
-	(*LeaveResponse)(nil),       // 7: chat.LeaveResponse
-	(*SubscribeRequest)(nil),    // 8: chat.SubscribeRequest
+	(Direction)(0),              // 1: chat.Direction
+	(*Event)(nil),               // 2: chat.Event
+	(*JoinRequest)(nil),         // 3: chat.JoinRequest
+	(*JoinResponse)(nil),        // 4: chat.JoinResponse
+	(*SendMessageRequest)(nil),  // 5: chat.SendMessageRequest
+	(*SendMessageResponse)(nil), // 6: chat.SendMessageResponse
+	(*LeaveRequest)(nil),        // 7: chat.LeaveRequest
+	(*LeaveResponse)(nil),       // 8: chat.LeaveResponse
+	(*SubscribeRequest)(nil),    // 9: chat.SubscribeRequest
+	(*MoveRequest)(nil),         // 10: chat.MoveRequest
+	(*MoveResponse)(nil),        // 11: chat.MoveResponse
 }
 var file_proto_chat_proto_depIdxs = []int32{
-	0, // 0: chat.Event.type:type_name -> chat.EventType
-	2, // 1: chat.ChatService.Join:input_type -> chat.JoinRequest
-	4, // 2: chat.ChatService.SendMessage:input_type -> chat.SendMessageRequest
-	6, // 3: chat.ChatService.Leave:input_type -> chat.LeaveRequest
-	8, // 4: chat.ChatService.Subscribe:input_type -> chat.SubscribeRequest
-	3, // 5: chat.ChatService.Join:output_type -> chat.JoinResponse
-	5, // 6: chat.ChatService.SendMessage:output_type -> chat.SendMessageResponse
-	7, // 7: chat.ChatService.Leave:output_type -> chat.LeaveResponse
-	1, // 8: chat.ChatService.Subscribe:output_type -> chat.Event
-	5, // [5:9] is the sub-list for method output_type
-	1, // [1:5] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0,  // 0: chat.Event.type:type_name -> chat.EventType
+	1,  // 1: chat.Event.direction:type_name -> chat.Direction
+	1,  // 2: chat.MoveRequest.direction:type_name -> chat.Direction
+	3,  // 3: chat.ChatService.Join:input_type -> chat.JoinRequest
+	5,  // 4: chat.ChatService.SendMessage:input_type -> chat.SendMessageRequest
+	7,  // 5: chat.ChatService.Leave:input_type -> chat.LeaveRequest
+	10, // 6: chat.ChatService.Move:input_type -> chat.MoveRequest
+	9,  // 7: chat.ChatService.Subscribe:input_type -> chat.SubscribeRequest
+	4,  // 8: chat.ChatService.Join:output_type -> chat.JoinResponse
+	6,  // 9: chat.ChatService.SendMessage:output_type -> chat.SendMessageResponse
+	8,  // 10: chat.ChatService.Leave:output_type -> chat.LeaveResponse
+	11, // 11: chat.ChatService.Move:output_type -> chat.MoveResponse
+	2,  // 12: chat.ChatService.Subscribe:output_type -> chat.Event
+	8,  // [8:13] is the sub-list for method output_type
+	3,  // [3:8] is the sub-list for method input_type
+	3,  // [3:3] is the sub-list for extension type_name
+	3,  // [3:3] is the sub-list for extension extendee
+	0,  // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_proto_chat_proto_init() }
@@ -536,8 +719,8 @@ func file_proto_chat_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_chat_proto_rawDesc), len(file_proto_chat_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   8,
+			NumEnums:      2,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

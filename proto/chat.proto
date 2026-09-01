@@ -4,10 +4,27 @@ package chat;
 
 option go_package = "github.com/tomba07/bombshell/proto/chat";
 
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_CHAT = 1;
+  EVENT_TYPE_PLAYER_JOINED = 2;
+  EVENT_TYPE_PLAYER_LEFT = 3;
+  EVENT_TYPE_MOVE = 4;
+}
+
+enum Direction {
+  DIRECTION_UNSPECIFIED = 0;
+  DIRECTION_UP = 1;
+  DIRECTION_DOWN = 2;
+  DIRECTION_LEFT = 3;
+  DIRECTION_RIGHT = 4;
+}
+
 service ChatService {
   rpc Join(JoinRequest) returns (JoinResponse);
   rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
   rpc Leave(LeaveRequest) returns (LeaveResponse);
+  rpc Move(MoveRequest) returns (MoveResponse);
 
   rpc Subscribe(SubscribeRequest) returns (stream Event);
 }
@@ -16,13 +33,7 @@ message Event {
   EventType type = 1;
   string player_id = 2;
   string message = 3;
-}
-
-enum EventType {
-  EVENT_TYPE_UNSPECIFIED = 0;
-  EVENT_TYPE_CHAT = 1;
-  EVENT_TYPE_PLAYER_JOINED = 2;
-  EVENT_TYPE_PLAYER_LEFT = 3;
+  Direction direction = 4;
 }
 
 message JoinRequest {
@@ -52,4 +63,13 @@ message LeaveResponse {
 
 message SubscribeRequest {
   string player_id = 1;
+}
+
+message MoveRequest {
+  string player_id = 1;
+  Direction direction = 2;
+}
+
+message MoveResponse {
+  bool ok = 1;
 }
