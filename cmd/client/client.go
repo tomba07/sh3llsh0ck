@@ -20,6 +20,8 @@ func (c *Client) handleEvent(event *pb.Event) {
 		fmt.Println(event.Message)
 	case pb.EventType_EVENT_TYPE_PLAYER_LEFT:
 		fmt.Println(event.Message)
+	case pb.EventType_EVENT_TYPE_MOVE:
+		fmt.Printf("%s moved %v\n", event.PlayerId, event.Direction)
 	default:
 		fmt.Printf("unknown event: %v\n", event.Type)
 	}
@@ -38,6 +40,18 @@ func (c *Client) Join(name string) error {
 
 	c.playerID = response.PlayerId
 	return nil
+}
+
+func (c *Client) Move(direction pb.Direction) error {
+	_, err := c.grpcClient.Move(
+		context.Background(),
+		&pb.MoveRequest{
+			PlayerId:  c.playerID,
+			Direction: direction,
+		},
+	)
+
+	return err
 }
 
 func (c *Client) SendMessage(message string) error {

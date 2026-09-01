@@ -62,6 +62,41 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 	}, nil
 }
 
+func (s *server) Move(
+	ctx context.Context,
+	req *pb.MoveRequest,
+) (*pb.MoveResponse, error) {
+	s.mu.Lock()
+
+	if _, joined := s.clients[req.PlayerId]; !joined {
+		s.mu.Unlock()
+		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
+	}
+
+	clients := make([]*client, 0, len(s.clients))
+	for _, client := range s.clients {
+		clients = append(clients, client)
+	}
+
+	s.mu.Unlock()
+
+	event := &pb.Event{
+		Type:      pb.EventType_EVENT_TYPE_MOVE,
+		PlayerId:  req.PlayerId,
+		Direction: req.Direction,
+	}
+
+	for _, client := range clients {
+		client.messages <- event
+	}
+
+	fmt.Printf("%s moved %v\n", req.PlayerId, req.Direction)
+
+	return &pb.MoveResponse{
+		Ok: true,
+	}, nil
+}
+
 func (s *server) SendMessage(
 	ctx context.Context,
 	req *pb.SendMessageRequest,
