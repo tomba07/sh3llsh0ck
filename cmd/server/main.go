@@ -24,6 +24,13 @@ type client struct {
 	messages chan *pb.Event
 }
 
+type tile int
+
+const (
+	tileEmpty tile = iota
+	tileWall
+)
+
 type position struct {
 	x int
 	y int
@@ -32,7 +39,33 @@ type position struct {
 type gameState struct {
 	width     int
 	height    int
+	tiles     [][]tile
 	positions map[string]position
+}
+
+func newGameState(width, height int) gameState {
+	tiles := make([][]tile, height)
+
+	for y := 0; y < height; y++ {
+		tiles[y] = make([]tile, width)
+	}
+
+	for x := 0; x < width; x++ {
+		tiles[0][x] = tileWall
+		tiles[height-1][x] = tileWall
+	}
+
+	for y := 0; y < height; y++ {
+		tiles[y][0] = tileWall
+		tiles[y][width-1] = tileWall
+	}
+
+	return gameState{
+		width:     width,
+		height:    height,
+		tiles:     tiles,
+		positions: make(map[string]position),
+	}
 }
 
 func (s *server) getClient(playerID string) (*client, bool) {
@@ -124,6 +157,22 @@ func (s *server) Move(
 		pos.x--
 	case pb.Direction_DIRECTION_RIGHT:
 		pos.x++
+	}
+
+	if pos.x < 0 ||
+		pos.x >= s.game.width ||
+		pos.y < 0 ||
+		pos.y >= s.game.height {
+		s.mu.Unlock()
+
+		return &pb.MoveResponse{
+			Ok: false,
+		}, nil
+	}
+
+	if s.game.tiles[pos.y][pos.x] == tileWall {
+		s.mu.Unlock()
+		return &pb.MoveResponse{Ok: false}, nil
 	}
 
 	s.game.positions[req.PlayerId] = pos
@@ -240,11 +289,7 @@ func main() {
 
 	chatServer := &server{
 		clients: make(map[string]*client),
-		game: gameState{
-			width:     10,
-			height:    10,
-			positions: make(map[string]position),
-		},
+		game:    newGameState(10, 10),
 	}
 
 	pb.RegisterChatServiceServer(
