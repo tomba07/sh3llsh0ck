@@ -10,29 +10,78 @@ import (
 type Client struct {
 	grpcClient pb.ChatServiceClient
 	playerID   string
+	players    map[string]position
+}
+
+type position struct {
+	x int32
+	y int32
+}
+
+func (c *Client) render() {
+	const width = 10
+	const height = 10
+
+	// clear screen + move cursor to top-left
+	fmt.Print("\033[2J\033[H")
+
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+
+			if x == 0 || x == width-1 ||
+				y == 0 || y == height-1 {
+				fmt.Print("#")
+				continue
+			}
+
+			playerHere := false
+
+			for playerID, pos := range c.players {
+				if pos.x == int32(x) && pos.y == int32(y) {
+					if playerID == c.playerID {
+						fmt.Print("@")
+					} else {
+						fmt.Print("P")
+					}
+
+					playerHere = true
+					break
+				}
+			}
+
+			if !playerHere {
+				fmt.Print(".")
+			}
+		}
+
+		fmt.Print("\r\n")
+	}
+
+	fmt.Print("\r\nArrow keys to move, q to quit\r\n")
 }
 
 func (c *Client) handleEvent(event *pb.Event) {
 	switch event.Type {
-	case pb.EventType_EVENT_TYPE_CHAT:
-		fmt.Printf("[%s] %s\r\n", event.PlayerId, event.Message)
-
 	case pb.EventType_EVENT_TYPE_PLAYER_JOINED:
-		fmt.Printf("%s\r\n", event.Message)
+		c.players[event.PlayerId] = position{
+			x: event.X,
+			y: event.Y,
+		}
 
 	case pb.EventType_EVENT_TYPE_PLAYER_LEFT:
-		fmt.Printf("%s\r\n", event.Message)
+		delete(c.players, event.PlayerId)
 
 	case pb.EventType_EVENT_TYPE_MOVE:
-		fmt.Printf(
-			"%s moved %v\r\n",
-			event.PlayerId,
-			event.Direction,
-		)
+		c.players[event.PlayerId] = position{
+			x: event.X,
+			y: event.Y,
+		}
 
-	default:
-		fmt.Printf("unknown event: %v\r\n", event.Type)
+	case pb.EventType_EVENT_TYPE_CHAT:
+		// ignore for rendering for now
 	}
+
+	c.render()
 }
 
 func (c *Client) Join(name string) error {

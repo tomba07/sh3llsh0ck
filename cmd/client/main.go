@@ -53,6 +53,7 @@ func main() {
 
 	client := &Client{
 		grpcClient: pb.NewChatServiceClient(conn),
+		players:    make(map[string]position),
 	}
 
 	scanner := bufio.NewScanner(os.Stdin)

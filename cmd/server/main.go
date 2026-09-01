@@ -120,11 +120,13 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 	s.mu.Unlock()
 
 	message := fmt.Sprintf("%s joined", req.Name)
-
+	pos := s.game.positions[req.Name]
 	event := &pb.Event{
 		Type:     pb.EventType_EVENT_TYPE_PLAYER_JOINED,
 		PlayerId: req.Name,
 		Message:  message,
+		X:        int32(pos.x),
+		Y:        int32(pos.y),
 	}
 
 	broadcast(clients, event)
