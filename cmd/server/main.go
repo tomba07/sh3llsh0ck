@@ -96,7 +96,7 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 
 	broadcast(clients, event)
 
-	fmt.Printf("%s joined\n", req.Name)
+	fmt.Printf("%s joined\r\n", req.Name)
 
 	return &pb.JoinResponse{
 		PlayerId: req.Name,
@@ -164,7 +164,7 @@ func (s *server) SendMessage(
 
 	broadcast(s.snapshotClients(), event)
 
-	fmt.Printf("[%s] %s\n", req.PlayerId, req.Message)
+	fmt.Printf("[%s] %s\r\n", req.PlayerId, req.Message)
 
 	return &pb.SendMessageResponse{Ok: true}, nil
 }
@@ -201,7 +201,7 @@ func (s *server) Leave(
 
 	broadcast(clients, event)
 
-	fmt.Printf("%s left\n", req.PlayerId)
+	fmt.Printf("%s left\r\n", req.PlayerId)
 
 	return &pb.LeaveResponse{
 		Ok: true,

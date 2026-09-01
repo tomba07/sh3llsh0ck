@@ -15,15 +15,23 @@ type Client struct {
 func (c *Client) handleEvent(event *pb.Event) {
 	switch event.Type {
 	case pb.EventType_EVENT_TYPE_CHAT:
-		fmt.Printf("[%s] %s\n", event.PlayerId, event.Message)
+		fmt.Printf("[%s] %s\r\n", event.PlayerId, event.Message)
+
 	case pb.EventType_EVENT_TYPE_PLAYER_JOINED:
-		fmt.Println(event.Message)
+		fmt.Printf("%s\r\n", event.Message)
+
 	case pb.EventType_EVENT_TYPE_PLAYER_LEFT:
-		fmt.Println(event.Message)
+		fmt.Printf("%s\r\n", event.Message)
+
 	case pb.EventType_EVENT_TYPE_MOVE:
-		fmt.Printf("%s moved %v\n", event.PlayerId, event.Direction)
+		fmt.Printf(
+			"%s moved %v\r\n",
+			event.PlayerId,
+			event.Direction,
+		)
+
 	default:
-		fmt.Printf("unknown event: %v\n", event.Type)
+		fmt.Printf("unknown event: %v\r\n", event.Type)
 	}
 }
 

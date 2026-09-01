@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 
 	pb "github.com/tomba07/bombshell/proto"
+	"golang.org/x/term"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -24,17 +23,6 @@ func leaveClient(client *Client) {
 	if err := client.Leave(); err != nil {
 		log.Printf("failed to leave: %v\n", err)
 	}
-}
-
-func handleShutdown(client *Client) {
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-
-	go func() {
-		<-sigChan
-		leaveClient(client)
-		os.Exit(0)
-	}()
 }
 
 func readName(scanner *bufio.Scanner) string {
@@ -71,22 +59,54 @@ func main() {
 
 	name := readName(scanner)
 	check(client.Join(name))
+	defer leaveClient(client)
+
+	fmt.Printf("Joined as %s\n", client.playerID)
+	fmt.Println("Use arrow keys to move, q to quit")
+
+	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	check(err)
+	defer term.Restore(int(os.Stdin.Fd()), oldState)
 
 	go func() {
 		if err := client.Subscribe(); err != nil {
-			log.Printf("subscribe ended %v\n", err)
+			log.Printf("subscribe ended: %v\r\n", err)
 		}
 	}()
-	fmt.Printf("Joined as %s\n", client.playerID)
-	defer leaveClient(client)
 
-	handleShutdown(client)
+	buffer := make([]byte, 1)
 
-	fmt.Println("Type a message and press Enter:")
+	for {
+		_, err := os.Stdin.Read(buffer)
+		check(err)
 
-	for scanner.Scan() {
-		check(client.SendMessage(scanner.Text()))
+		switch buffer[0] {
+		case 'q':
+			return
+
+		case 27: // ESC
+			sequence := make([]byte, 2)
+
+			_, err := os.Stdin.Read(sequence)
+			check(err)
+
+			if sequence[0] != '[' {
+				continue
+			}
+
+			switch sequence[1] {
+			case 'A':
+				check(client.Move(pb.Direction_DIRECTION_UP))
+
+			case 'B':
+				check(client.Move(pb.Direction_DIRECTION_DOWN))
+
+			case 'C':
+				check(client.Move(pb.Direction_DIRECTION_RIGHT))
+
+			case 'D':
+				check(client.Move(pb.Direction_DIRECTION_LEFT))
+			}
+		}
 	}
-
-	check(scanner.Err())
 }
