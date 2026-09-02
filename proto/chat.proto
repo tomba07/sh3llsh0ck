@@ -44,6 +44,8 @@ message JoinRequest {
 
 message JoinResponse {
   string player_id = 1;
+  int32 width = 2;
+  int32 height = 3;
 }
 
 message SendMessageRequest {

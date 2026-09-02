@@ -262,6 +262,8 @@ func (x *JoinRequest) GetName() string {
 type JoinResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PlayerId      string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	Width         int32                  `protobuf:"varint,2,opt,name=width,proto3" json:"width,omitempty"`
+	Height        int32                  `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -301,6 +303,20 @@ func (x *JoinResponse) GetPlayerId() string {
 		return x.PlayerId
 	}
 	return ""
+}
+
+func (x *JoinResponse) GetWidth() int32 {
+	if x != nil {
+		return x.Width
+	}
+	return 0
+}
+
+func (x *JoinResponse) GetHeight() int32 {
+	if x != nil {
+		return x.Height
+	}
+	return 0
 }
 
 type SendMessageRequest struct {
@@ -640,9 +656,11 @@ const file_proto_chat_proto_rawDesc = "" +
 	"\x01x\x18\x05 \x01(\x05R\x01x\x12\f\n" +
 	"\x01y\x18\x06 \x01(\x05R\x01y\"!\n" +
 	"\vJoinRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"+\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"Y\n" +
 	"\fJoinResponse\x12\x1b\n" +
-	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\"K\n" +
+	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x14\n" +
+	"\x05width\x18\x02 \x01(\x05R\x05width\x12\x16\n" +
+	"\x06height\x18\x03 \x01(\x05R\x06height\"K\n" +
 	"\x12SendMessageRequest\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"%\n" +

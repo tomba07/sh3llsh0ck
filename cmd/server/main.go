@@ -135,6 +135,8 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 
 	return &pb.JoinResponse{
 		PlayerId: req.Name,
+		Width:    int32(s.game.width),
+		Height:   int32(s.game.height),
 	}, nil
 }
 

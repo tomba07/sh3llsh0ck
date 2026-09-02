@@ -10,6 +10,8 @@ import (
 type Client struct {
 	grpcClient pb.ChatServiceClient
 	playerID   string
+	width      int32
+	height     int32
 	players    map[string]position
 }
 
@@ -19,17 +21,15 @@ type position struct {
 }
 
 func (c *Client) render() {
-	const width = 10
-	const height = 10
 
 	// clear screen + move cursor to top-left
 	fmt.Print("\033[2J\033[H")
 
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
+	for y := int32(0); y < c.height; y++ {
+		for x := int32(0); x < c.width; x++ {
 
-			if x == 0 || x == width-1 ||
-				y == 0 || y == height-1 {
+			if x == 0 || x == c.width-1 ||
+				y == 0 || y == c.height-1 {
 				fmt.Print("#")
 				continue
 			}
@@ -37,7 +37,7 @@ func (c *Client) render() {
 			playerHere := false
 
 			for playerID, pos := range c.players {
-				if pos.x == int32(x) && pos.y == int32(y) {
+				if pos.x == x && pos.y == y {
 					if playerID == c.playerID {
 						fmt.Print("@")
 					} else {
@@ -96,6 +96,8 @@ func (c *Client) Join(name string) error {
 	}
 
 	c.playerID = response.PlayerId
+	c.width = response.Width
+	c.height = response.Height
 	return nil
 }
 
