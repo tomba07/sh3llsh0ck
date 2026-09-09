@@ -237,6 +237,13 @@ func (s *server) Move(
 		return &pb.MoveResponse{Ok: false}, nil
 	}
 
+	for id, p := range s.game.positions {
+		if id != req.PlayerId && p == pos {
+			s.mu.Unlock()
+			return &pb.MoveResponse{Ok: false}, nil
+		}
+	}
+
 	s.game.positions[req.PlayerId] = pos
 
 	clients := make([]*client, 0, len(s.clients))
