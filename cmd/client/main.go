@@ -13,36 +13,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func check(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func leaveClient(client *Client) {
-	if err := client.Leave(); err != nil {
-		log.Printf("failed to leave: %v\n", err)
-	}
-}
-
-func readName(scanner *bufio.Scanner) string {
-	for {
-		fmt.Print("Enter your name: ")
-
-		if !scanner.Scan() {
-			check(scanner.Err())
-			log.Fatal("no name entered")
-		}
-
-		name := strings.TrimSpace(scanner.Text())
-		if name != "" {
-			return name
-		}
-
-		fmt.Println("Name cannot be empty.")
-	}
-}
-
 func main() {
 	conn, err := grpc.NewClient(
 		"localhost:50051",
@@ -109,5 +79,35 @@ func main() {
 				check(client.Move(pb.Direction_DIRECTION_LEFT))
 			}
 		}
+	}
+}
+
+func readName(scanner *bufio.Scanner) string {
+	for {
+		fmt.Print("Enter your name: ")
+
+		if !scanner.Scan() {
+			check(scanner.Err())
+			log.Fatal("no name entered")
+		}
+
+		name := strings.TrimSpace(scanner.Text())
+		if name != "" {
+			return name
+		}
+
+		fmt.Println("Name cannot be empty.")
+	}
+}
+
+func leaveClient(client *Client) {
+	if err := client.Leave(); err != nil {
+		log.Printf("failed to leave: %v\n", err)
+	}
+}
+
+func check(err error) {
+	if err != nil {
+		log.Fatal(err)
 	}
 }

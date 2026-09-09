@@ -43,109 +43,28 @@ type gameState struct {
 	positions map[string]position
 }
 
-func abs(x int) int {
-	if x < 0 {
-		return -x
-	}
-	return x
-}
-
-func manhattan(a, b position) int {
-	return abs(a.col-b.col) + abs(a.row-b.row)
-}
-
-func (g *gameState) bestSpawn() (position, bool) {
-	best := position{}
-	bestDist := -1
-
-	// First player spawns in center
-	if len(g.positions) == 0 {
-		return position{col: g.width / 2, row: g.height / 2}, true
+func main() {
+	listener, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	for row := 1; row < g.height-1; row++ {
-		for col := 1; col < g.width-1; col++ {
-			if g.tiles[row][col] != tileEmpty {
-				continue
-			}
-			candidate := position{col: col, row: row}
-			alreadyOccupied := false
+	grpcServer := grpc.NewServer()
 
-			for _, p := range g.positions {
-				if p == candidate {
-					alreadyOccupied = true
-					break
-				}
-			}
-			if alreadyOccupied {
-				continue
-			}
-
-			minDist := g.width * g.height // large sentinel
-
-			for _, p := range g.positions {
-				if d := manhattan(candidate, p); d < minDist {
-					minDist = d
-				}
-			}
-			if minDist > bestDist {
-				bestDist = minDist
-				best = candidate
-			}
-		}
+	chatServer := &server{
+		clients: make(map[string]*client),
+		game:    newGameState(10, 10),
 	}
 
-	return best, bestDist != -1
-}
+	pb.RegisterChatServiceServer(
+		grpcServer,
+		chatServer,
+	)
 
-func newGameState(width, height int) gameState {
-	tiles := make([][]tile, height)
+	fmt.Println("Server listening on :50051")
 
-	for row := range height {
-		tiles[row] = make([]tile, width)
-	}
-
-	for col := range width {
-		tiles[0][col] = tileWall
-		tiles[height-1][col] = tileWall
-	}
-
-	for row := range height {
-		tiles[row][0] = tileWall
-		tiles[row][width-1] = tileWall
-	}
-
-	return gameState{
-		width:     width,
-		height:    height,
-		tiles:     tiles,
-		positions: make(map[string]position),
-	}
-}
-
-func (s *server) getClient(playerID string) (*client, bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	client, joined := s.clients[playerID]
-	return client, joined
-}
-
-func (s *server) snapshotClients() []*client {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	clients := make([]*client, 0, len(s.clients))
-	for _, client := range s.clients {
-		clients = append(clients, client)
-	}
-
-	return clients
-}
-
-func broadcast(clients []*client, event *pb.Event) {
-	for _, client := range clients {
-		client.messages <- event
+	if err := grpcServer.Serve(listener); err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -206,6 +125,28 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 		Width:    int32(s.game.width),
 		Height:   int32(s.game.height),
 	}, nil
+}
+
+func (s *server) Subscribe(
+	req *pb.SubscribeRequest,
+	stream pb.ChatService_SubscribeServer,
+) error {
+	client, joined := s.getClient(req.PlayerId)
+	if !joined {
+		return fmt.Errorf("player %q is not joined", req.PlayerId)
+	}
+
+	for {
+		select {
+		case message := <-client.messages:
+			if err := stream.Send(message); err != nil {
+				return err
+			}
+
+		case <-stream.Context().Done():
+			return stream.Context().Err()
+		}
+	}
 }
 
 func (s *server) Move(
@@ -336,49 +277,107 @@ func (s *server) Leave(
 	}, nil
 }
 
-func (s *server) Subscribe(
-	req *pb.SubscribeRequest,
-	stream pb.ChatService_SubscribeServer,
-) error {
-	client, joined := s.getClient(req.PlayerId)
-	if !joined {
-		return fmt.Errorf("player %q is not joined", req.PlayerId)
-	}
-
-	for {
-		select {
-		case message := <-client.messages:
-			if err := stream.Send(message); err != nil {
-				return err
-			}
-
-		case <-stream.Context().Done():
-			return stream.Context().Err()
-		}
+func broadcast(clients []*client, event *pb.Event) {
+	for _, client := range clients {
+		client.messages <- event
 	}
 }
 
-func main() {
-	listener, err := net.Listen("tcp", ":50051")
-	if err != nil {
-		log.Fatal(err)
+func (s *server) snapshotClients() []*client {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	clients := make([]*client, 0, len(s.clients))
+	for _, client := range s.clients {
+		clients = append(clients, client)
 	}
 
-	grpcServer := grpc.NewServer()
+	return clients
+}
 
-	chatServer := &server{
-		clients: make(map[string]*client),
-		game:    newGameState(10, 10),
+func (s *server) getClient(playerID string) (*client, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	client, joined := s.clients[playerID]
+	return client, joined
+}
+
+func (g *gameState) bestSpawn() (position, bool) {
+	best := position{}
+	bestDist := -1
+
+	if len(g.positions) == 0 {
+		return position{col: g.width / 2, row: g.height / 2}, true
 	}
 
-	pb.RegisterChatServiceServer(
-		grpcServer,
-		chatServer,
-	)
+	for row := 1; row < g.height-1; row++ {
+		for col := 1; col < g.width-1; col++ {
+			if g.tiles[row][col] != tileEmpty {
+				continue
+			}
+			candidate := position{col: col, row: row}
+			alreadyOccupied := false
 
-	fmt.Println("Server listening on :50051")
+			for _, p := range g.positions {
+				if p == candidate {
+					alreadyOccupied = true
+					break
+				}
+			}
+			if alreadyOccupied {
+				continue
+			}
 
-	if err := grpcServer.Serve(listener); err != nil {
-		log.Fatal(err)
+			minDist := g.width * g.height // large sentinel
+
+			for _, p := range g.positions {
+				if d := manhattan(candidate, p); d < minDist {
+					minDist = d
+				}
+			}
+			if minDist > bestDist {
+				bestDist = minDist
+				best = candidate
+			}
+		}
 	}
+
+	return best, bestDist != -1
+}
+
+func newGameState(width, height int) gameState {
+	tiles := make([][]tile, height)
+
+	for row := range height {
+		tiles[row] = make([]tile, width)
+	}
+
+	for col := range width {
+		tiles[0][col] = tileWall
+		tiles[height-1][col] = tileWall
+	}
+
+	for row := range height {
+		tiles[row][0] = tileWall
+		tiles[row][width-1] = tileWall
+	}
+
+	return gameState{
+		width:     width,
+		height:    height,
+		tiles:     tiles,
+		positions: make(map[string]position),
+	}
+}
+
+func manhattan(a, b position) int {
+	return abs(a.col-b.col) + abs(a.row-b.row)
+}
+
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }

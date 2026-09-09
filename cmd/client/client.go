@@ -20,8 +20,53 @@ type position struct {
 	row int32
 }
 
-func (c *Client) render() {
+func (c *Client) Subscribe() error {
+	stream, err := c.grpcClient.Subscribe(
+		context.Background(),
+		&pb.SubscribeRequest{
+			PlayerId: c.playerID,
+		},
+	)
 
+	if err != nil {
+		return err
+	}
+
+	for {
+		event, err := stream.Recv()
+		if err != nil {
+			return err
+		}
+
+		c.handleEvent(event)
+	}
+}
+
+func (c *Client) handleEvent(event *pb.Event) {
+	switch event.Type {
+	case pb.EventType_EVENT_TYPE_PLAYER_JOINED:
+		c.players[event.PlayerId] = position{
+			col: event.X,
+			row: event.Y,
+		}
+
+	case pb.EventType_EVENT_TYPE_PLAYER_LEFT:
+		delete(c.players, event.PlayerId)
+
+	case pb.EventType_EVENT_TYPE_MOVE:
+		c.players[event.PlayerId] = position{
+			col: event.X,
+			row: event.Y,
+		}
+
+	case pb.EventType_EVENT_TYPE_CHAT:
+		// ignore for rendering for now
+	}
+
+	c.render()
+}
+
+func (c *Client) render() {
 	// move cursor to top-left
 	fmt.Print("\033[H")
 
@@ -58,30 +103,6 @@ func (c *Client) render() {
 	}
 
 	fmt.Print("\r\nArrow keys to move, q to quit\r\n")
-}
-
-func (c *Client) handleEvent(event *pb.Event) {
-	switch event.Type {
-	case pb.EventType_EVENT_TYPE_PLAYER_JOINED:
-		c.players[event.PlayerId] = position{
-			col: event.X,
-			row: event.Y,
-		}
-
-	case pb.EventType_EVENT_TYPE_PLAYER_LEFT:
-		delete(c.players, event.PlayerId)
-
-	case pb.EventType_EVENT_TYPE_MOVE:
-		c.players[event.PlayerId] = position{
-			col: event.X,
-			row: event.Y,
-		}
-
-	case pb.EventType_EVENT_TYPE_CHAT:
-		// ignore for rendering for now
-	}
-
-	c.render()
 }
 
 func (c *Client) Join(name string) error {
@@ -134,26 +155,4 @@ func (c *Client) Leave() error {
 	)
 
 	return err
-}
-
-func (c *Client) Subscribe() error {
-	stream, err := c.grpcClient.Subscribe(
-		context.Background(),
-		&pb.SubscribeRequest{
-			PlayerId: c.playerID,
-		},
-	)
-
-	if err != nil {
-		return err
-	}
-
-	for {
-		event, err := stream.Recv()
-		if err != nil {
-			return err
-		}
-
-		c.handleEvent(event)
-	}
 }
