@@ -1,7 +1,3 @@
-Spawn location
-
-Player Collisions
-
 Bombs
 
 Score
