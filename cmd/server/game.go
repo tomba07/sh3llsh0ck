@@ -17,6 +17,13 @@ type gameState struct {
 	height    int
 	tiles     [][]tile
 	positions map[string]position
+	bombs     map[string]bomb
+}
+
+type bomb struct {
+	col     int
+	row     int
+	ownerID string
 }
 
 func newGameState(width, height int) gameState {
@@ -41,6 +48,7 @@ func newGameState(width, height int) gameState {
 		height:    height,
 		tiles:     tiles,
 		positions: make(map[string]position),
+		bombs:     make(map[string]bomb),
 	}
 }
 
@@ -85,6 +93,24 @@ func (g *gameState) bestSpawn() (position, bool) {
 	}
 
 	return best, bestDist != -1
+}
+
+func (g *gameState) placeBomb(playerID string) (bomb, bool) {
+	pos, ok := g.positions[playerID]
+	if !ok {
+		return bomb{}, false
+	}
+
+	for _, b := range g.bombs {
+		if b.col == pos.col && b.row == pos.row {
+			return bomb{}, false
+		}
+	}
+
+	b := bomb{col: pos.col, row: pos.row, ownerID: playerID}
+	g.bombs[playerID] = b
+
+	return b, true
 }
 
 func manhattan(a, b position) int {
