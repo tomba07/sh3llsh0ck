@@ -32,8 +32,8 @@ const (
 )
 
 type position struct {
-	x int
-	y int
+	col int
+	row int
 }
 
 type gameState struct {
@@ -51,7 +51,7 @@ func abs(x int) int {
 }
 
 func manhattan(a, b position) int {
-	return abs(a.x-b.x) + abs(a.y-b.y)
+	return abs(a.col-b.col) + abs(a.row-b.row)
 }
 
 func (g *gameState) bestSpawn() (position, bool) {
@@ -60,7 +60,7 @@ func (g *gameState) bestSpawn() (position, bool) {
 
 	// First player spawns in center
 	if len(g.positions) == 0 {
-		return position{x: g.width / 2, y: g.height / 2}, true
+		return position{col: g.width / 2, row: g.height / 2}, true
 	}
 
 	for row := 1; row < g.height-1; row++ {
@@ -68,7 +68,7 @@ func (g *gameState) bestSpawn() (position, bool) {
 			if g.tiles[row][col] != tileEmpty {
 				continue
 			}
-			candidate := position{x: col, y: row}
+			candidate := position{col: col, row: row}
 			alreadyOccupied := false
 
 			for _, p := range g.positions {
@@ -101,18 +101,18 @@ func (g *gameState) bestSpawn() (position, bool) {
 func newGameState(width, height int) gameState {
 	tiles := make([][]tile, height)
 
-	for y := 0; y < height; y++ {
-		tiles[y] = make([]tile, width)
+	for row := range height {
+		tiles[row] = make([]tile, width)
 	}
 
-	for x := 0; x < width; x++ {
-		tiles[0][x] = tileWall
-		tiles[height-1][x] = tileWall
+	for col := range width {
+		tiles[0][col] = tileWall
+		tiles[height-1][col] = tileWall
 	}
 
-	for y := 0; y < height; y++ {
-		tiles[y][0] = tileWall
-		tiles[y][width-1] = tileWall
+	for row := range height {
+		tiles[row][0] = tileWall
+		tiles[row][width-1] = tileWall
 	}
 
 	return gameState{
@@ -178,8 +178,8 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 		s.clients[req.Name].messages <- &pb.Event{
 			Type:     pb.EventType_EVENT_TYPE_PLAYER_JOINED,
 			PlayerId: id,
-			X:        int32(pos.x),
-			Y:        int32(pos.y),
+			X:        int32(pos.col),
+			Y:        int32(pos.row),
 		}
 	}
 
@@ -193,8 +193,8 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 		Type:     pb.EventType_EVENT_TYPE_PLAYER_JOINED,
 		PlayerId: req.Name,
 		Message:  message,
-		X:        int32(pos.x),
-		Y:        int32(pos.y),
+		X:        int32(pos.col),
+		Y:        int32(pos.row),
 	}
 
 	broadcast(clients, event)
@@ -222,19 +222,19 @@ func (s *server) Move(
 
 	switch req.Direction {
 	case pb.Direction_DIRECTION_UP:
-		pos.y--
+		pos.row--
 	case pb.Direction_DIRECTION_DOWN:
-		pos.y++
+		pos.row++
 	case pb.Direction_DIRECTION_LEFT:
-		pos.x--
+		pos.col--
 	case pb.Direction_DIRECTION_RIGHT:
-		pos.x++
+		pos.col++
 	}
 
-	if pos.x < 0 ||
-		pos.x >= s.game.width ||
-		pos.y < 0 ||
-		pos.y >= s.game.height {
+	if pos.col < 0 ||
+		pos.col >= s.game.width ||
+		pos.row < 0 ||
+		pos.row >= s.game.height {
 		s.mu.Unlock()
 
 		return &pb.MoveResponse{
@@ -242,7 +242,7 @@ func (s *server) Move(
 		}, nil
 	}
 
-	if s.game.tiles[pos.y][pos.x] == tileWall {
+	if s.game.tiles[pos.row][pos.col] == tileWall {
 		s.mu.Unlock()
 		return &pb.MoveResponse{Ok: false}, nil
 	}
@@ -267,8 +267,8 @@ func (s *server) Move(
 		Type:      pb.EventType_EVENT_TYPE_MOVE,
 		PlayerId:  req.PlayerId,
 		Direction: req.Direction,
-		X:         int32(pos.x),
-		Y:         int32(pos.y),
+		X:         int32(pos.col),
+		Y:         int32(pos.row),
 	}
 
 	broadcast(clients, event)

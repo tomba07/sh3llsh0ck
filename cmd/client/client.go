@@ -16,8 +16,8 @@ type Client struct {
 }
 
 type position struct {
-	x int32
-	y int32
+	col int32
+	row int32
 }
 
 func (c *Client) render() {
@@ -25,11 +25,11 @@ func (c *Client) render() {
 	// move cursor to top-left
 	fmt.Print("\033[H")
 
-	for y := int32(0); y < c.height; y++ {
-		for x := int32(0); x < c.width; x++ {
+	for row := int32(0); row < c.height; row++ {
+		for col := int32(0); col < c.width; col++ {
 
-			if x == 0 || x == c.width-1 ||
-				y == 0 || y == c.height-1 {
+			if col == 0 || col == c.width-1 ||
+				row == 0 || row == c.height-1 {
 				fmt.Print("#")
 				continue
 			}
@@ -37,7 +37,7 @@ func (c *Client) render() {
 			playerHere := false
 
 			for playerID, pos := range c.players {
-				if pos.x == x && pos.y == y {
+				if pos.col == col && pos.row == row {
 					if playerID == c.playerID {
 						fmt.Print("@")
 					} else {
@@ -64,8 +64,8 @@ func (c *Client) handleEvent(event *pb.Event) {
 	switch event.Type {
 	case pb.EventType_EVENT_TYPE_PLAYER_JOINED:
 		c.players[event.PlayerId] = position{
-			x: event.X,
-			y: event.Y,
+			col: event.X,
+			row: event.Y,
 		}
 
 	case pb.EventType_EVENT_TYPE_PLAYER_LEFT:
@@ -73,8 +73,8 @@ func (c *Client) handleEvent(event *pb.Event) {
 
 	case pb.EventType_EVENT_TYPE_MOVE:
 		c.players[event.PlayerId] = position{
-			x: event.X,
-			y: event.Y,
+			col: event.X,
+			row: event.Y,
 		}
 
 	case pb.EventType_EVENT_TYPE_CHAT:
