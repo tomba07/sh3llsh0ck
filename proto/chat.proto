@@ -10,6 +10,8 @@ enum EventType {
   EVENT_TYPE_PLAYER_JOINED = 2;
   EVENT_TYPE_PLAYER_LEFT = 3;
   EVENT_TYPE_MOVE = 4;
+  EVENT_TYPE_BOMB_PLACED = 5;
+  EVENT_TYPE_EXPLOSION = 6;
 }
 
 enum Direction {
@@ -25,7 +27,7 @@ service ChatService {
   rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
   rpc Leave(LeaveRequest) returns (LeaveResponse);
   rpc Move(MoveRequest) returns (MoveResponse);
-
+  rpc PlaceBomb(PlaceBombRequest) returns (PlaceBombResponse);
   rpc Subscribe(SubscribeRequest) returns (stream Event);
 }
 
@@ -75,5 +77,13 @@ message MoveRequest {
 }
 
 message MoveResponse {
+  bool ok = 1;
+}
+
+message PlaceBombRequest {
+  string player_id = 1;
+}
+
+message PlaceBombResponse {
   bool ok = 1;
 }

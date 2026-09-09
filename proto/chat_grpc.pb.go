@@ -23,6 +23,7 @@ const (
 	ChatService_SendMessage_FullMethodName = "/chat.ChatService/SendMessage"
 	ChatService_Leave_FullMethodName       = "/chat.ChatService/Leave"
 	ChatService_Move_FullMethodName        = "/chat.ChatService/Move"
+	ChatService_PlaceBomb_FullMethodName   = "/chat.ChatService/PlaceBomb"
 	ChatService_Subscribe_FullMethodName   = "/chat.ChatService/Subscribe"
 )
 
@@ -34,6 +35,7 @@ type ChatServiceClient interface {
 	SendMessage(ctx context.Context, in *SendMessageRequest, opts ...grpc.CallOption) (*SendMessageResponse, error)
 	Leave(ctx context.Context, in *LeaveRequest, opts ...grpc.CallOption) (*LeaveResponse, error)
 	Move(ctx context.Context, in *MoveRequest, opts ...grpc.CallOption) (*MoveResponse, error)
+	PlaceBomb(ctx context.Context, in *PlaceBombRequest, opts ...grpc.CallOption) (*PlaceBombResponse, error)
 	Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Event], error)
 }
 
@@ -85,6 +87,16 @@ func (c *chatServiceClient) Move(ctx context.Context, in *MoveRequest, opts ...g
 	return out, nil
 }
 
+func (c *chatServiceClient) PlaceBomb(ctx context.Context, in *PlaceBombRequest, opts ...grpc.CallOption) (*PlaceBombResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PlaceBombResponse)
+	err := c.cc.Invoke(ctx, ChatService_PlaceBomb_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *chatServiceClient) Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Event], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &ChatService_ServiceDesc.Streams[0], ChatService_Subscribe_FullMethodName, cOpts...)
@@ -112,6 +124,7 @@ type ChatServiceServer interface {
 	SendMessage(context.Context, *SendMessageRequest) (*SendMessageResponse, error)
 	Leave(context.Context, *LeaveRequest) (*LeaveResponse, error)
 	Move(context.Context, *MoveRequest) (*MoveResponse, error)
+	PlaceBomb(context.Context, *PlaceBombRequest) (*PlaceBombResponse, error)
 	Subscribe(*SubscribeRequest, grpc.ServerStreamingServer[Event]) error
 	mustEmbedUnimplementedChatServiceServer()
 }
@@ -134,6 +147,9 @@ func (UnimplementedChatServiceServer) Leave(context.Context, *LeaveRequest) (*Le
 }
 func (UnimplementedChatServiceServer) Move(context.Context, *MoveRequest) (*MoveResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Move not implemented")
+}
+func (UnimplementedChatServiceServer) PlaceBomb(context.Context, *PlaceBombRequest) (*PlaceBombResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PlaceBomb not implemented")
 }
 func (UnimplementedChatServiceServer) Subscribe(*SubscribeRequest, grpc.ServerStreamingServer[Event]) error {
 	return status.Error(codes.Unimplemented, "method Subscribe not implemented")
@@ -231,6 +247,24 @@ func _ChatService_Move_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChatService_PlaceBomb_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PlaceBombRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).PlaceBomb(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_PlaceBomb_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).PlaceBomb(ctx, req.(*PlaceBombRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ChatService_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(SubscribeRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -264,6 +298,10 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Move",
 			Handler:    _ChatService_Move_Handler,
+		},
+		{
+			MethodName: "PlaceBomb",
+			Handler:    _ChatService_PlaceBomb_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
