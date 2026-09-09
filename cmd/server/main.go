@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"sync"
+	"time"
 
 	pb "github.com/tomba07/bombshell/proto"
 	"google.golang.org/grpc"
@@ -23,7 +24,6 @@ type client struct {
 	name     string
 	messages chan *pb.Event
 }
-
 
 func main() {
 	listener, err := net.Listen("tcp", ":50051")
@@ -259,6 +259,74 @@ func (s *server) Leave(
 	}, nil
 }
 
+func (s *server) PlaceBomb(
+	ctx context.Context,
+	req *pb.PlaceBombRequest,
+) (*pb.PlaceBombResponse, error) {
+	s.mu.Lock()
+	_, joined := s.game.positions[req.PlayerId]
+
+	if !joined {
+		s.mu.Unlock()
+		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
+	}
+
+	b, ok := s.game.placeBomb(req.PlayerId)
+	if !ok {
+		s.mu.Unlock()
+		return &pb.PlaceBombResponse{Ok: false}, nil
+	}
+
+	clients := make([]*client, 0, len(s.clients))
+	for _, client := range s.clients {
+		clients = append(clients, client)
+	}
+
+	event := &pb.Event{
+		Type:     pb.EventType_EVENT_TYPE_BOMB_PLACED,
+		PlayerId: req.PlayerId,
+		X:        int32(b.col),
+		Y:        int32(b.row),
+	}
+
+	s.mu.Unlock()
+	broadcast(clients, event)
+
+	go func() {
+		time.Sleep(3 * time.Second)
+
+		s.mu.Lock()
+		killed, respawns := s.game.explode(b)
+		allClients := make([]*client, 0, len(s.clients))
+		for _, c := range s.clients {
+			allClients = append(allClients, c)
+		}
+		s.mu.Unlock()
+
+		broadcast(allClients, &pb.Event{
+			Type: pb.EventType_EVENT_TYPE_EXPLOSION,
+			X:    int32(b.col),
+			Y:    int32(b.row),
+		})
+		for _, id := range killed {
+			broadcast(allClients, &pb.Event{
+				Type:     pb.EventType_EVENT_TYPE_CHAT,
+				PlayerId: id,
+				Message:  fmt.Sprintf("%s was killed by %s", id, b.ownerID),
+			})
+			newPos := respawns[id]
+			broadcast(allClients, &pb.Event{
+				Type:     pb.EventType_EVENT_TYPE_PLAYER_JOINED,
+				PlayerId: id,
+				X:        int32(newPos.col),
+				Y:        int32(newPos.row),
+			})
+		}
+	}()
+
+	return &pb.PlaceBombResponse{Ok: true}, nil
+}
+
 func broadcast(clients []*client, event *pb.Event) {
 	for _, client := range clients {
 		client.messages <- event
@@ -284,4 +352,3 @@ func (s *server) getClient(playerID string) (*client, bool) {
 	client, joined := s.clients[playerID]
 	return client, joined
 }
-

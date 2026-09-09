@@ -113,6 +113,25 @@ func (g *gameState) placeBomb(playerID string) (bomb, bool) {
 	return b, true
 }
 
+func (g *gameState) explode(b bomb) (killed []string, respawns map[string]position) {
+	delete(g.bombs, b.ownerID)
+
+	respawns = make(map[string]position)
+	for id, p := range g.positions {
+		if abs(p.col-b.col)+abs(p.row-b.row) <= 1 {
+			killed = append(killed, id)
+		}
+	}
+	for _, id := range killed {
+		spawn, ok := g.bestSpawn()
+		if ok {
+			g.positions[id] = spawn
+			respawns[id] = spawn
+		}
+	}
+	return
+}
+
 func manhattan(a, b position) int {
 	return abs(a.col-b.col) + abs(a.row-b.row)
 }
