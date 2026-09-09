@@ -43,6 +43,61 @@ type gameState struct {
 	positions map[string]position
 }
 
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
+func manhattan(a, b position) int {
+	return abs(a.x-b.x) + abs(a.y-b.y)
+}
+
+func (g *gameState) bestSpawn() (position, bool) {
+	best := position{}
+	bestDist := -1
+
+	// First player spawns in center
+	if len(g.positions) == 0 {
+		return position{x: g.width / 2, y: g.height / 2}, true
+	}
+
+	for row := 1; row < g.height-1; row++ {
+		for col := 1; col < g.width-1; col++ {
+			if g.tiles[row][col] != tileEmpty {
+				continue
+			}
+			candidate := position{x: col, y: row}
+			alreadyOccupied := false
+
+			for _, p := range g.positions {
+				if p == candidate {
+					alreadyOccupied = true
+					break
+				}
+			}
+			if alreadyOccupied {
+				continue
+			}
+
+			minDist := g.width * g.height // large sentinel
+
+			for _, p := range g.positions {
+				if d := manhattan(candidate, p); d < minDist {
+					minDist = d
+				}
+			}
+			if minDist > bestDist {
+				bestDist = minDist
+				best = candidate
+			}
+		}
+	}
+
+	return best, bestDist != -1
+}
+
 func newGameState(width, height int) gameState {
 	tiles := make([][]tile, height)
 
@@ -112,10 +167,13 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 		clients = append(clients, client)
 	}
 
-	s.game.positions[req.Name] = position{
-		x: 1,
-		y: 1,
+	best, ok := s.game.bestSpawn()
+	if !ok {
+		s.mu.Unlock()
+		return nil, fmt.Errorf("no available spawn positions")
 	}
+
+	s.game.positions[req.Name] = best
 
 	s.mu.Unlock()
 
