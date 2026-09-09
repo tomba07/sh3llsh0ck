@@ -173,6 +173,16 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 		return nil, fmt.Errorf("no available spawn positions")
 	}
 
+	// Add existing players
+	for id, pos := range s.game.positions {
+		s.clients[req.Name].messages <- &pb.Event{
+			Type:     pb.EventType_EVENT_TYPE_PLAYER_JOINED,
+			PlayerId: id,
+			X:        int32(pos.x),
+			Y:        int32(pos.y),
+		}
+	}
+
 	s.game.positions[req.Name] = best
 
 	s.mu.Unlock()

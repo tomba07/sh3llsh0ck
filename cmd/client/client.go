@@ -22,8 +22,8 @@ type position struct {
 
 func (c *Client) render() {
 
-	// clear screen + move cursor to top-left
-	fmt.Print("\033[2J\033[H")
+	// move cursor to top-left
+	fmt.Print("\033[H")
 
 	for y := int32(0); y < c.height; y++ {
 		for x := int32(0); x < c.width; x++ {
