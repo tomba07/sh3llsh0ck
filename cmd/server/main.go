@@ -79,8 +79,8 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 		s.clients[req.Name].messages <- &pb.Event{
 			Type:     pb.EventType_EVENT_TYPE_PLAYER_JOINED,
 			PlayerId: id,
-			X:        int32(pos.col),
-			Y:        int32(pos.row),
+			Col: int32(pos.col),
+			Row: int32(pos.row),
 		}
 	}
 
@@ -94,8 +94,8 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 		Type:     pb.EventType_EVENT_TYPE_PLAYER_JOINED,
 		PlayerId: req.Name,
 		Message:  message,
-		X:        int32(pos.col),
-		Y:        int32(pos.row),
+		Col: int32(pos.col),
+		Row: int32(pos.row),
 	}
 
 	broadcast(clients, event)
@@ -190,8 +190,8 @@ func (s *server) Move(
 		Type:      pb.EventType_EVENT_TYPE_MOVE,
 		PlayerId:  req.PlayerId,
 		Direction: req.Direction,
-		X:         int32(pos.col),
-		Y:         int32(pos.row),
+		Col: int32(pos.col),
+		Row: int32(pos.row),
 	}
 
 	broadcast(clients, event)
@@ -285,8 +285,8 @@ func (s *server) PlaceTrap(
 	event := &pb.Event{
 		Type:     pb.EventType_EVENT_TYPE_TRAP_PLACED,
 		PlayerId: req.PlayerId,
-		X:        int32(t.col),
-		Y:        int32(t.row),
+		Col: int32(t.col),
+		Row: int32(t.row),
 	}
 
 	s.mu.Unlock()
@@ -310,8 +310,8 @@ func (s *server) scheduleTrap(t trap) {
 		broadcast(allClients, &pb.Event{
 			Type:        pb.EventType_EVENT_TYPE_TRAP_TRIGGERED,
 			PlayerId:    t.ownerID,
-			X:           int32(t.col),
-			Y:           int32(t.row),
+			Col: int32(t.col),
+			Row: int32(t.row),
 			BlastRadius: int32(blastRadius),
 		})
 		for _, id := range hit {
@@ -324,8 +324,8 @@ func (s *server) scheduleTrap(t trap) {
 			broadcast(allClients, &pb.Event{
 				Type:     pb.EventType_EVENT_TYPE_PLAYER_JOINED,
 				PlayerId: id,
-				X:        int32(newPos.col),
-				Y:        int32(newPos.row),
+				Col: int32(newPos.col),
+				Row: int32(newPos.row),
 			})
 		}
 	}()

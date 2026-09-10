@@ -49,8 +49,8 @@ func (c *Client) handleEvent(event *pb.Event) {
 	switch event.Type {
 	case pb.EventType_EVENT_TYPE_PLAYER_JOINED:
 		c.players[event.PlayerId] = position{
-			col: event.X,
-			row: event.Y,
+			col: event.Col,
+			row: event.Row,
 		}
 
 	case pb.EventType_EVENT_TYPE_PLAYER_LEFT:
@@ -58,26 +58,26 @@ func (c *Client) handleEvent(event *pb.Event) {
 
 	case pb.EventType_EVENT_TYPE_MOVE:
 		c.players[event.PlayerId] = position{
-			col: event.X,
-			row: event.Y,
+			col: event.Col,
+			row: event.Row,
 		}
 
 	case pb.EventType_EVENT_TYPE_CHAT:
 		// ignore for rendering for now
 
 	case pb.EventType_EVENT_TYPE_TRAP_PLACED:
-		c.traps[event.PlayerId] = position{col: event.X, row: event.Y}
+		c.traps[event.PlayerId] = position{col: event.Col, row: event.Row}
 
 	case pb.EventType_EVENT_TYPE_TRAP_TRIGGERED:
 		var tiles []position
 		radius := int32(event.BlastRadius)
-		tiles = append(tiles, position{col: event.X, row: event.Y})
+		tiles = append(tiles, position{col: event.Col, row: event.Row})
 		for i := int32(1); i <= radius; i++ {
 			tiles = append(tiles,
-				position{col: event.X + i, row: event.Y},
-				position{col: event.X - i, row: event.Y},
-				position{col: event.X, row: event.Y + i},
-				position{col: event.X, row: event.Y - i},
+				position{col: event.Col + i, row: event.Row},
+				position{col: event.Col - i, row: event.Row},
+				position{col: event.Col, row: event.Row + i},
+				position{col: event.Col, row: event.Row - i},
 			)
 		}
 		delete(c.traps, event.PlayerId)

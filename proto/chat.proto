@@ -36,8 +36,8 @@ message Event {
   string player_id = 2;
   string message = 3;
   Direction direction = 4;
-  int32 x = 5;
-  int32 y = 6;
+  int32 col = 5;
+  int32 row = 6;
   int32 blast_radius = 7;
 }
 
