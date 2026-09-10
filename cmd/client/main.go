@@ -24,7 +24,7 @@ func main() {
 	client := &Client{
 		grpcClient: pb.NewChatServiceClient(conn),
 		players:    make(map[string]position),
-		traps:      make(map[string]position),
+		traps:      make(map[string]trap),
 		blasts:     make(map[string][]position),
 	}
 

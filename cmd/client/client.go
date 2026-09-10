@@ -14,13 +14,18 @@ type Client struct {
 	width      int32
 	height     int32
 	players    map[string]position
-	traps      map[string]position
+	traps      map[string]trap
 	blasts     map[string][]position
 }
 
 type position struct {
 	col int32
 	row int32
+}
+
+type trap struct {
+	pos   position
+	color string
 }
 
 func (c *Client) Subscribe() error {
@@ -66,7 +71,36 @@ func (c *Client) handleEvent(event *pb.Event) {
 		// ignore for rendering for now
 
 	case pb.EventType_EVENT_TYPE_TRAP_PLACED:
-		c.traps[event.PlayerId] = position{col: event.Col, row: event.Row}
+		c.traps[event.PlayerId] = trap{
+			pos:   position{col: event.Col, row: event.Row},
+			color: colorBrightMagenta,
+		}
+		go func(ownerID string) {
+			for range 3 {
+				time.Sleep(250 * time.Millisecond)
+				t := c.traps[ownerID]
+				t.color = colorBrightYellow
+				c.traps[ownerID] = t
+				c.render()
+				time.Sleep(250 * time.Millisecond)
+				t = c.traps[ownerID]
+				t.color = colorBrightMagenta
+				c.traps[ownerID] = t
+				c.render()
+			}
+			for range 5 {
+				time.Sleep(75 * time.Millisecond)
+				t := c.traps[ownerID]
+				t.color = colorBrightYellow
+				c.traps[ownerID] = t
+				c.render()
+				time.Sleep(75 * time.Millisecond)
+				t = c.traps[ownerID]
+				t.color = colorBrightMagenta
+				c.traps[ownerID] = t
+				c.render()
+			}
+		}(event.PlayerId)
 
 	case pb.EventType_EVENT_TYPE_TRAP_TRIGGERED:
 		var tiles []position
@@ -118,8 +152,8 @@ func (c *Client) render() {
 
 			trapHere := false
 			for _, t := range c.traps {
-				if t.col == col && t.row == row {
-					fmt.Print(colorBrightMagenta + "*" + colorReset)
+				if t.pos.col == col && t.pos.row == row {
+					fmt.Print(t.color + "*" + colorReset)
 					trapHere = true
 					break
 				}
