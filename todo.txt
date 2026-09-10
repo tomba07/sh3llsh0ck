@@ -1,3 +1,11 @@
-Bombs
-
 Score
+
+Exit improvement
+
+Respawn delay
+
+Trap delays
+
+Server+Client Mode
+
+Remote Connections

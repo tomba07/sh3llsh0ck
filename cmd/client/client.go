@@ -94,6 +94,15 @@ func (c *Client) handleEvent(event *pb.Event) {
 	c.render()
 }
 
+const (
+	colorReset          = "\033[0m"
+	colorDarkGray       = "\033[90m"
+	colorBrightGreen    = "\033[92m"
+	colorBrightYellow   = "\033[93m"
+	colorBrightRed      = "\033[91m"
+	colorBrightMagenta  = "\033[95m"
+)
+
 func (c *Client) render() {
 	// move cursor to top-left
 	fmt.Print("\033[H")
@@ -103,14 +112,14 @@ func (c *Client) render() {
 
 			if col == 0 || col == c.width-1 ||
 				row == 0 || row == c.height-1 {
-				fmt.Print("#")
+				fmt.Print(colorDarkGray + "#" + colorReset)
 				continue
 			}
 
 			trapHere := false
 			for _, t := range c.traps {
 				if t.col == col && t.row == row {
-					fmt.Print("*")
+					fmt.Print(colorBrightMagenta + "*" + colorReset)
 					trapHere = true
 					break
 				}
@@ -123,7 +132,7 @@ func (c *Client) render() {
 			for _, tiles := range c.blasts {
 				for _, t := range tiles {
 					if t.col == col && t.row == row {
-						fmt.Print("X")
+						fmt.Print(colorBrightRed + "X" + colorReset)
 						blastHere = true
 						break
 					}
@@ -141,9 +150,9 @@ func (c *Client) render() {
 			for playerID, pos := range c.players {
 				if pos.col == col && pos.row == row {
 					if playerID == c.playerID {
-						fmt.Print("@")
+						fmt.Print(colorBrightGreen + "@" + colorReset)
 					} else {
-						fmt.Print("P")
+						fmt.Print(colorBrightYellow + "P" + colorReset)
 					}
 
 					playerHere = true
@@ -152,7 +161,7 @@ func (c *Client) render() {
 			}
 
 			if !playerHere {
-				fmt.Print(".")
+				fmt.Print(colorDarkGray + "." + colorReset)
 			}
 		}
 
