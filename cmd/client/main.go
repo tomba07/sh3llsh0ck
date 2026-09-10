@@ -24,6 +24,8 @@ func main() {
 	client := &Client{
 		grpcClient: pb.NewChatServiceClient(conn),
 		players:    make(map[string]position),
+		traps:      make(map[string]position),
+		blasts:     make(map[string][]position),
 	}
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -45,6 +47,8 @@ func main() {
 		}
 	}()
 
+	fmt.Print("\033[2J\033[H")
+
 	buffer := make([]byte, 1)
 
 	for {
@@ -54,6 +58,9 @@ func main() {
 		switch buffer[0] {
 		case 'q':
 			return
+
+		case ' ':
+			check(client.PlaceTrap())
 
 		case 27: // ESC
 			sequence := make([]byte, 2)

@@ -38,6 +38,7 @@ message Event {
   Direction direction = 4;
   int32 x = 5;
   int32 y = 6;
+  int32 blast_radius = 7;
 }
 
 message JoinRequest {

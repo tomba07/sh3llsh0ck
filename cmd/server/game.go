@@ -7,6 +7,8 @@ const (
 	tileWall
 )
 
+const blastRadius = 2
+
 type position struct {
 	col int
 	row int
@@ -118,7 +120,9 @@ func (g *gameState) detonate(t trap) (hit []string, respawns map[string]position
 
 	respawns = make(map[string]position)
 	for id, p := range g.positions {
-		if abs(p.col-t.col)+abs(p.row-t.row) <= 1 {
+		sameCol := p.col == t.col && abs(p.row-t.row) <= blastRadius
+		sameRow := p.row == t.row && abs(p.col-t.col) <= blastRadius
+		if sameCol || sameRow {
 			hit = append(hit, id)
 		}
 	}

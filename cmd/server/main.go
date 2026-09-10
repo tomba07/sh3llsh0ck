@@ -308,9 +308,11 @@ func (s *server) scheduleTrap(t trap) {
 		s.mu.Unlock()
 
 		broadcast(allClients, &pb.Event{
-			Type: pb.EventType_EVENT_TYPE_TRAP_TRIGGERED,
-			X:    int32(t.col),
-			Y:    int32(t.row),
+			Type:        pb.EventType_EVENT_TYPE_TRAP_TRIGGERED,
+			PlayerId:    t.ownerID,
+			X:           int32(t.col),
+			Y:           int32(t.row),
+			BlastRadius: int32(blastRadius),
 		})
 		for _, id := range hit {
 			broadcast(allClients, &pb.Event{

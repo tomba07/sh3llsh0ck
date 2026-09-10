@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	pb "github.com/tomba07/bombshell/proto"
 )
@@ -13,6 +14,8 @@ type Client struct {
 	width      int32
 	height     int32
 	players    map[string]position
+	traps      map[string]position
+	blasts     map[string][]position
 }
 
 type position struct {
@@ -61,6 +64,31 @@ func (c *Client) handleEvent(event *pb.Event) {
 
 	case pb.EventType_EVENT_TYPE_CHAT:
 		// ignore for rendering for now
+
+	case pb.EventType_EVENT_TYPE_TRAP_PLACED:
+		c.traps[event.PlayerId] = position{col: event.X, row: event.Y}
+
+	case pb.EventType_EVENT_TYPE_TRAP_TRIGGERED:
+		var tiles []position
+		radius := int32(event.BlastRadius)
+		tiles = append(tiles, position{col: event.X, row: event.Y})
+		for i := int32(1); i <= radius; i++ {
+			tiles = append(tiles,
+				position{col: event.X + i, row: event.Y},
+				position{col: event.X - i, row: event.Y},
+				position{col: event.X, row: event.Y + i},
+				position{col: event.X, row: event.Y - i},
+			)
+		}
+		delete(c.traps, event.PlayerId)
+		c.blasts[event.PlayerId] = tiles
+		c.render()
+		go func() {
+			time.Sleep(1500 * time.Millisecond)
+			delete(c.blasts, event.PlayerId)
+			c.render()
+		}()
+		return // skip the render() at the bottom — already called
 	}
 
 	c.render()
@@ -76,6 +104,35 @@ func (c *Client) render() {
 			if col == 0 || col == c.width-1 ||
 				row == 0 || row == c.height-1 {
 				fmt.Print("#")
+				continue
+			}
+
+			trapHere := false
+			for _, t := range c.traps {
+				if t.col == col && t.row == row {
+					fmt.Print("*")
+					trapHere = true
+					break
+				}
+			}
+			if trapHere {
+				continue
+			}
+
+			blastHere := false
+			for _, tiles := range c.blasts {
+				for _, t := range tiles {
+					if t.col == col && t.row == row {
+						fmt.Print("X")
+						blastHere = true
+						break
+					}
+				}
+				if blastHere {
+					break
+				}
+			}
+			if blastHere {
 				continue
 			}
 
@@ -131,6 +188,14 @@ func (c *Client) Move(direction pb.Direction) error {
 		},
 	)
 
+	return err
+}
+
+func (c *Client) PlaceTrap() error {
+	_, err := c.grpcClient.PlaceTrap(
+		context.Background(),
+		&pb.PlaceTrapRequest{PlayerId: c.playerID},
+	)
 	return err
 }
 
