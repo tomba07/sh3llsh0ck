@@ -24,13 +24,13 @@ const (
 type EventType int32
 
 const (
-	EventType_EVENT_TYPE_UNSPECIFIED   EventType = 0
-	EventType_EVENT_TYPE_CHAT          EventType = 1
-	EventType_EVENT_TYPE_PLAYER_JOINED EventType = 2
-	EventType_EVENT_TYPE_PLAYER_LEFT   EventType = 3
-	EventType_EVENT_TYPE_MOVE          EventType = 4
-	EventType_EVENT_TYPE_BOMB_PLACED   EventType = 5
-	EventType_EVENT_TYPE_EXPLOSION     EventType = 6
+	EventType_EVENT_TYPE_UNSPECIFIED    EventType = 0
+	EventType_EVENT_TYPE_CHAT           EventType = 1
+	EventType_EVENT_TYPE_PLAYER_JOINED  EventType = 2
+	EventType_EVENT_TYPE_PLAYER_LEFT    EventType = 3
+	EventType_EVENT_TYPE_MOVE           EventType = 4
+	EventType_EVENT_TYPE_TRAP_PLACED    EventType = 5
+	EventType_EVENT_TYPE_TRAP_TRIGGERED EventType = 6
 )
 
 // Enum value maps for EventType.
@@ -41,17 +41,17 @@ var (
 		2: "EVENT_TYPE_PLAYER_JOINED",
 		3: "EVENT_TYPE_PLAYER_LEFT",
 		4: "EVENT_TYPE_MOVE",
-		5: "EVENT_TYPE_BOMB_PLACED",
-		6: "EVENT_TYPE_EXPLOSION",
+		5: "EVENT_TYPE_TRAP_PLACED",
+		6: "EVENT_TYPE_TRAP_TRIGGERED",
 	}
 	EventType_value = map[string]int32{
-		"EVENT_TYPE_UNSPECIFIED":   0,
-		"EVENT_TYPE_CHAT":          1,
-		"EVENT_TYPE_PLAYER_JOINED": 2,
-		"EVENT_TYPE_PLAYER_LEFT":   3,
-		"EVENT_TYPE_MOVE":          4,
-		"EVENT_TYPE_BOMB_PLACED":   5,
-		"EVENT_TYPE_EXPLOSION":     6,
+		"EVENT_TYPE_UNSPECIFIED":    0,
+		"EVENT_TYPE_CHAT":           1,
+		"EVENT_TYPE_PLAYER_JOINED":  2,
+		"EVENT_TYPE_PLAYER_LEFT":    3,
+		"EVENT_TYPE_MOVE":           4,
+		"EVENT_TYPE_TRAP_PLACED":    5,
+		"EVENT_TYPE_TRAP_TRIGGERED": 6,
 	}
 )
 
@@ -649,27 +649,27 @@ func (x *MoveResponse) GetOk() bool {
 	return false
 }
 
-type PlaceBombRequest struct {
+type PlaceTrapRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PlayerId      string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *PlaceBombRequest) Reset() {
-	*x = PlaceBombRequest{}
+func (x *PlaceTrapRequest) Reset() {
+	*x = PlaceTrapRequest{}
 	mi := &file_proto_chat_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *PlaceBombRequest) String() string {
+func (x *PlaceTrapRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*PlaceBombRequest) ProtoMessage() {}
+func (*PlaceTrapRequest) ProtoMessage() {}
 
-func (x *PlaceBombRequest) ProtoReflect() protoreflect.Message {
+func (x *PlaceTrapRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_chat_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -681,39 +681,39 @@ func (x *PlaceBombRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use PlaceBombRequest.ProtoReflect.Descriptor instead.
-func (*PlaceBombRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlaceTrapRequest.ProtoReflect.Descriptor instead.
+func (*PlaceTrapRequest) Descriptor() ([]byte, []int) {
 	return file_proto_chat_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *PlaceBombRequest) GetPlayerId() string {
+func (x *PlaceTrapRequest) GetPlayerId() string {
 	if x != nil {
 		return x.PlayerId
 	}
 	return ""
 }
 
-type PlaceBombResponse struct {
+type PlaceTrapResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Ok            bool                   `protobuf:"varint,1,opt,name=ok,proto3" json:"ok,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *PlaceBombResponse) Reset() {
-	*x = PlaceBombResponse{}
+func (x *PlaceTrapResponse) Reset() {
+	*x = PlaceTrapResponse{}
 	mi := &file_proto_chat_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *PlaceBombResponse) String() string {
+func (x *PlaceTrapResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*PlaceBombResponse) ProtoMessage() {}
+func (*PlaceTrapResponse) ProtoMessage() {}
 
-func (x *PlaceBombResponse) ProtoReflect() protoreflect.Message {
+func (x *PlaceTrapResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_chat_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -725,12 +725,12 @@ func (x *PlaceBombResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use PlaceBombResponse.ProtoReflect.Descriptor instead.
-func (*PlaceBombResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlaceTrapResponse.ProtoReflect.Descriptor instead.
+func (*PlaceTrapResponse) Descriptor() ([]byte, []int) {
 	return file_proto_chat_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *PlaceBombResponse) GetOk() bool {
+func (x *PlaceTrapResponse) GetOk() bool {
 	if x != nil {
 		return x.Ok
 	}
@@ -771,18 +771,18 @@ const file_proto_chat_proto_rawDesc = "" +
 	"\tdirection\x18\x02 \x01(\x0e2\x0f.chat.DirectionR\tdirection\"\x1e\n" +
 	"\fMoveResponse\x12\x0e\n" +
 	"\x02ok\x18\x01 \x01(\bR\x02ok\"/\n" +
-	"\x10PlaceBombRequest\x12\x1b\n" +
+	"\x10PlaceTrapRequest\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\"#\n" +
-	"\x11PlaceBombResponse\x12\x0e\n" +
-	"\x02ok\x18\x01 \x01(\bR\x02ok*\xc1\x01\n" +
+	"\x11PlaceTrapResponse\x12\x0e\n" +
+	"\x02ok\x18\x01 \x01(\bR\x02ok*\xc6\x01\n" +
 	"\tEventType\x12\x1a\n" +
 	"\x16EVENT_TYPE_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fEVENT_TYPE_CHAT\x10\x01\x12\x1c\n" +
 	"\x18EVENT_TYPE_PLAYER_JOINED\x10\x02\x12\x1a\n" +
 	"\x16EVENT_TYPE_PLAYER_LEFT\x10\x03\x12\x13\n" +
 	"\x0fEVENT_TYPE_MOVE\x10\x04\x12\x1a\n" +
-	"\x16EVENT_TYPE_BOMB_PLACED\x10\x05\x12\x18\n" +
-	"\x14EVENT_TYPE_EXPLOSION\x10\x06*u\n" +
+	"\x16EVENT_TYPE_TRAP_PLACED\x10\x05\x12\x1d\n" +
+	"\x19EVENT_TYPE_TRAP_TRIGGERED\x10\x06*u\n" +
 	"\tDirection\x12\x19\n" +
 	"\x15DIRECTION_UNSPECIFIED\x10\x00\x12\x10\n" +
 	"\fDIRECTION_UP\x10\x01\x12\x12\n" +
@@ -794,7 +794,7 @@ const file_proto_chat_proto_rawDesc = "" +
 	"\vSendMessage\x12\x18.chat.SendMessageRequest\x1a\x19.chat.SendMessageResponse\x120\n" +
 	"\x05Leave\x12\x12.chat.LeaveRequest\x1a\x13.chat.LeaveResponse\x12-\n" +
 	"\x04Move\x12\x11.chat.MoveRequest\x1a\x12.chat.MoveResponse\x12<\n" +
-	"\tPlaceBomb\x12\x16.chat.PlaceBombRequest\x1a\x17.chat.PlaceBombResponse\x122\n" +
+	"\tPlaceTrap\x12\x16.chat.PlaceTrapRequest\x1a\x17.chat.PlaceTrapResponse\x122\n" +
 	"\tSubscribe\x12\x16.chat.SubscribeRequest\x1a\v.chat.Event0\x01B)Z'github.com/tomba07/bombshell/proto/chatb\x06proto3"
 
 var (
@@ -824,8 +824,8 @@ var file_proto_chat_proto_goTypes = []any{
 	(*SubscribeRequest)(nil),    // 9: chat.SubscribeRequest
 	(*MoveRequest)(nil),         // 10: chat.MoveRequest
 	(*MoveResponse)(nil),        // 11: chat.MoveResponse
-	(*PlaceBombRequest)(nil),    // 12: chat.PlaceBombRequest
-	(*PlaceBombResponse)(nil),   // 13: chat.PlaceBombResponse
+	(*PlaceTrapRequest)(nil),    // 12: chat.PlaceTrapRequest
+	(*PlaceTrapResponse)(nil),   // 13: chat.PlaceTrapResponse
 }
 var file_proto_chat_proto_depIdxs = []int32{
 	0,  // 0: chat.Event.type:type_name -> chat.EventType
@@ -835,13 +835,13 @@ var file_proto_chat_proto_depIdxs = []int32{
 	5,  // 4: chat.ChatService.SendMessage:input_type -> chat.SendMessageRequest
 	7,  // 5: chat.ChatService.Leave:input_type -> chat.LeaveRequest
 	10, // 6: chat.ChatService.Move:input_type -> chat.MoveRequest
-	12, // 7: chat.ChatService.PlaceBomb:input_type -> chat.PlaceBombRequest
+	12, // 7: chat.ChatService.PlaceTrap:input_type -> chat.PlaceTrapRequest
 	9,  // 8: chat.ChatService.Subscribe:input_type -> chat.SubscribeRequest
 	4,  // 9: chat.ChatService.Join:output_type -> chat.JoinResponse
 	6,  // 10: chat.ChatService.SendMessage:output_type -> chat.SendMessageResponse
 	8,  // 11: chat.ChatService.Leave:output_type -> chat.LeaveResponse
 	11, // 12: chat.ChatService.Move:output_type -> chat.MoveResponse
-	13, // 13: chat.ChatService.PlaceBomb:output_type -> chat.PlaceBombResponse
+	13, // 13: chat.ChatService.PlaceTrap:output_type -> chat.PlaceTrapResponse
 	2,  // 14: chat.ChatService.Subscribe:output_type -> chat.Event
 	9,  // [9:15] is the sub-list for method output_type
 	3,  // [3:9] is the sub-list for method input_type

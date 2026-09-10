@@ -17,10 +17,10 @@ type gameState struct {
 	height    int
 	tiles     [][]tile
 	positions map[string]position
-	bombs     map[string]bomb
+	traps     map[string]trap
 }
 
-type bomb struct {
+type trap struct {
 	col     int
 	row     int
 	ownerID string
@@ -48,7 +48,7 @@ func newGameState(width, height int) gameState {
 		height:    height,
 		tiles:     tiles,
 		positions: make(map[string]position),
-		bombs:     make(map[string]bomb),
+		traps:     make(map[string]trap),
 	}
 }
 
@@ -95,34 +95,34 @@ func (g *gameState) bestSpawn() (position, bool) {
 	return best, bestDist != -1
 }
 
-func (g *gameState) placeBomb(playerID string) (bomb, bool) {
+func (g *gameState) placeTrap(playerID string) (trap, bool) {
 	pos, ok := g.positions[playerID]
 	if !ok {
-		return bomb{}, false
+		return trap{}, false
 	}
 
-	for _, b := range g.bombs {
-		if b.col == pos.col && b.row == pos.row {
-			return bomb{}, false
+	for _, t := range g.traps {
+		if t.col == pos.col && t.row == pos.row {
+			return trap{}, false
 		}
 	}
 
-	b := bomb{col: pos.col, row: pos.row, ownerID: playerID}
-	g.bombs[playerID] = b
+	t := trap{col: pos.col, row: pos.row, ownerID: playerID}
+	g.traps[playerID] = t
 
-	return b, true
+	return t, true
 }
 
-func (g *gameState) explode(b bomb) (killed []string, respawns map[string]position) {
-	delete(g.bombs, b.ownerID)
+func (g *gameState) detonate(t trap) (hit []string, respawns map[string]position) {
+	delete(g.traps, t.ownerID)
 
 	respawns = make(map[string]position)
 	for id, p := range g.positions {
-		if abs(p.col-b.col)+abs(p.row-b.row) <= 1 {
-			killed = append(killed, id)
+		if abs(p.col-t.col)+abs(p.row-t.row) <= 1 {
+			hit = append(hit, id)
 		}
 	}
-	for _, id := range killed {
+	for _, id := range hit {
 		spawn, ok := g.bestSpawn()
 		if ok {
 			g.positions[id] = spawn

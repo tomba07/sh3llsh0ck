@@ -259,10 +259,10 @@ func (s *server) Leave(
 	}, nil
 }
 
-func (s *server) PlaceBomb(
+func (s *server) PlaceTrap(
 	ctx context.Context,
-	req *pb.PlaceBombRequest,
-) (*pb.PlaceBombResponse, error) {
+	req *pb.PlaceTrapRequest,
+) (*pb.PlaceTrapResponse, error) {
 	s.mu.Lock()
 	_, joined := s.game.positions[req.PlayerId]
 
@@ -271,10 +271,10 @@ func (s *server) PlaceBomb(
 		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
 	}
 
-	b, ok := s.game.placeBomb(req.PlayerId)
+	t, ok := s.game.placeTrap(req.PlayerId)
 	if !ok {
 		s.mu.Unlock()
-		return &pb.PlaceBombResponse{Ok: false}, nil
+		return &pb.PlaceTrapResponse{Ok: false}, nil
 	}
 
 	clients := make([]*client, 0, len(s.clients))
@@ -283,20 +283,24 @@ func (s *server) PlaceBomb(
 	}
 
 	event := &pb.Event{
-		Type:     pb.EventType_EVENT_TYPE_BOMB_PLACED,
+		Type:     pb.EventType_EVENT_TYPE_TRAP_PLACED,
 		PlayerId: req.PlayerId,
-		X:        int32(b.col),
-		Y:        int32(b.row),
+		X:        int32(t.col),
+		Y:        int32(t.row),
 	}
 
 	s.mu.Unlock()
 	broadcast(clients, event)
+	s.scheduleTrap(t)
+	return &pb.PlaceTrapResponse{Ok: true}, nil
+}
 
+func (s *server) scheduleTrap(t trap) {
 	go func() {
 		time.Sleep(3 * time.Second)
 
 		s.mu.Lock()
-		killed, respawns := s.game.explode(b)
+		hit, respawns := s.game.detonate(t)
 		allClients := make([]*client, 0, len(s.clients))
 		for _, c := range s.clients {
 			allClients = append(allClients, c)
@@ -304,15 +308,15 @@ func (s *server) PlaceBomb(
 		s.mu.Unlock()
 
 		broadcast(allClients, &pb.Event{
-			Type: pb.EventType_EVENT_TYPE_EXPLOSION,
-			X:    int32(b.col),
-			Y:    int32(b.row),
+			Type: pb.EventType_EVENT_TYPE_TRAP_TRIGGERED,
+			X:    int32(t.col),
+			Y:    int32(t.row),
 		})
-		for _, id := range killed {
+		for _, id := range hit {
 			broadcast(allClients, &pb.Event{
 				Type:     pb.EventType_EVENT_TYPE_CHAT,
 				PlayerId: id,
-				Message:  fmt.Sprintf("%s was killed by %s", id, b.ownerID),
+				Message:  fmt.Sprintf("%s was hit by %s's trap", id, t.ownerID),
 			})
 			newPos := respawns[id]
 			broadcast(allClients, &pb.Event{
@@ -323,8 +327,6 @@ func (s *server) PlaceBomb(
 			})
 		}
 	}()
-
-	return &pb.PlaceBombResponse{Ok: true}, nil
 }
 
 func broadcast(clients []*client, event *pb.Event) {
