@@ -84,7 +84,7 @@ func (c *Client) handleEvent(event *pb.Event) {
 		c.blasts[event.PlayerId] = tiles
 		c.render()
 		go func() {
-			time.Sleep(1500 * time.Millisecond)
+			time.Sleep(1000 * time.Millisecond)
 			delete(c.blasts, event.PlayerId)
 			c.render()
 		}()
@@ -95,12 +95,12 @@ func (c *Client) handleEvent(event *pb.Event) {
 }
 
 const (
-	colorReset          = "\033[0m"
-	colorDarkGray       = "\033[90m"
-	colorBrightGreen    = "\033[92m"
-	colorBrightYellow   = "\033[93m"
-	colorBrightRed      = "\033[91m"
-	colorBrightMagenta  = "\033[95m"
+	colorReset         = "\033[0m"
+	colorDarkGray      = "\033[90m"
+	colorBrightGreen   = "\033[92m"
+	colorBrightYellow  = "\033[93m"
+	colorBrightRed     = "\033[91m"
+	colorBrightMagenta = "\033[95m"
 )
 
 func (c *Client) render() {
