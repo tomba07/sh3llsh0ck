@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -26,7 +27,11 @@ type client struct {
 }
 
 func main() {
-	listener, err := net.Listen("tcp", ":50051")
+	port := flag.Int("port", 50051, "port to listen on")
+	flag.Parse()
+
+	addr := fmt.Sprintf(":%d", *port)
+	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,7 +48,7 @@ func main() {
 		chatServer,
 	)
 
-	fmt.Println("Server listening on :50051")
+	fmt.Printf("Server listening on %s\n", addr)
 
 	if err := grpcServer.Serve(listener); err != nil {
 		log.Fatal(err)

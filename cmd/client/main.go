@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -14,8 +15,11 @@ import (
 )
 
 func main() {
+	addr := flag.String("server", "localhost:50051", "server address (host:port)")
+	flag.Parse()
+
 	conn, err := grpc.NewClient(
-		"localhost:50051",
+		*addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	check(err)
