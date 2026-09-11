@@ -8,34 +8,35 @@ import (
 	pb "github.com/tomba07/bombshell/proto"
 )
 
-type Client struct {
+type gameClientView struct {
 	grpcClient pb.ChatServiceClient
 	playerID   string
-	width      int32
-	height     int32
+	width      int
+	height     int
 	players    map[string]position
-	traps      map[string]trap
+	traps      map[string]trapView
 	blasts     map[string][]position
 }
 
-type position struct {
-	col int32
-	row int32
-}
-
-type trap struct {
+type trapView struct {
 	pos   position
 	color string
 }
 
-func (c *Client) Subscribe() error {
+const (
+	colorReset         = "\033[0m"
+	colorDarkGray      = "\033[90m"
+	colorBrightGreen   = "\033[92m"
+	colorBrightYellow  = "\033[93m"
+	colorBrightRed     = "\033[91m"
+	colorBrightMagenta = "\033[95m"
+)
+
+func (c *gameClientView) Subscribe() error {
 	stream, err := c.grpcClient.Subscribe(
 		context.Background(),
-		&pb.SubscribeRequest{
-			PlayerId: c.playerID,
-		},
+		&pb.SubscribeRequest{PlayerId: c.playerID},
 	)
-
 	if err != nil {
 		return err
 	}
@@ -45,34 +46,27 @@ func (c *Client) Subscribe() error {
 		if err != nil {
 			return err
 		}
-
 		c.handleEvent(event)
 	}
 }
 
-func (c *Client) handleEvent(event *pb.Event) {
+func (c *gameClientView) handleEvent(event *pb.Event) {
 	switch event.Type {
 	case pb.EventType_EVENT_TYPE_PLAYER_JOINED:
-		c.players[event.PlayerId] = position{
-			col: event.Col,
-			row: event.Row,
-		}
+		c.players[event.PlayerId] = position{col: int(event.Col), row: int(event.Row)}
 
 	case pb.EventType_EVENT_TYPE_PLAYER_LEFT:
 		delete(c.players, event.PlayerId)
 
 	case pb.EventType_EVENT_TYPE_MOVE:
-		c.players[event.PlayerId] = position{
-			col: event.Col,
-			row: event.Row,
-		}
+		c.players[event.PlayerId] = position{col: int(event.Col), row: int(event.Row)}
 
 	case pb.EventType_EVENT_TYPE_CHAT:
-		// ignore for rendering for now
+		// ignore for rendering
 
 	case pb.EventType_EVENT_TYPE_TRAP_PLACED:
-		c.traps[event.PlayerId] = trap{
-			pos:   position{col: event.Col, row: event.Row},
+		c.traps[event.PlayerId] = trapView{
+			pos:   position{col: int(event.Col), row: int(event.Row)},
 			color: colorBrightMagenta,
 		}
 		go func(ownerID string) {
@@ -104,14 +98,14 @@ func (c *Client) handleEvent(event *pb.Event) {
 
 	case pb.EventType_EVENT_TYPE_TRAP_TRIGGERED:
 		var tiles []position
-		radius := int32(event.BlastRadius)
-		tiles = append(tiles, position{col: event.Col, row: event.Row})
-		for i := int32(1); i <= radius; i++ {
+		radius := int(event.BlastRadius)
+		tiles = append(tiles, position{col: int(event.Col), row: int(event.Row)})
+		for i := 1; i <= radius; i++ {
 			tiles = append(tiles,
-				position{col: event.Col + i, row: event.Row},
-				position{col: event.Col - i, row: event.Row},
-				position{col: event.Col, row: event.Row + i},
-				position{col: event.Col, row: event.Row - i},
+				position{col: int(event.Col) + i, row: int(event.Row)},
+				position{col: int(event.Col) - i, row: int(event.Row)},
+				position{col: int(event.Col), row: int(event.Row) + i},
+				position{col: int(event.Col), row: int(event.Row) - i},
 			)
 		}
 		delete(c.traps, event.PlayerId)
@@ -122,30 +116,18 @@ func (c *Client) handleEvent(event *pb.Event) {
 			delete(c.blasts, event.PlayerId)
 			c.render()
 		}()
-		return // skip the render() at the bottom — already called
+		return
 	}
 
 	c.render()
 }
 
-const (
-	colorReset         = "\033[0m"
-	colorDarkGray      = "\033[90m"
-	colorBrightGreen   = "\033[92m"
-	colorBrightYellow  = "\033[93m"
-	colorBrightRed     = "\033[91m"
-	colorBrightMagenta = "\033[95m"
-)
-
-func (c *Client) render() {
-	// move cursor to top-left
+func (c *gameClientView) render() {
 	fmt.Print("\033[H")
 
-	for row := int32(0); row < c.height; row++ {
-		for col := int32(0); col < c.width; col++ {
-
-			if col == 0 || col == c.width-1 ||
-				row == 0 || row == c.height-1 {
+	for row := 0; row < c.height; row++ {
+		for col := 0; col < c.width; col++ {
+			if col == 0 || col == c.width-1 || row == 0 || row == c.height-1 {
 				fmt.Print(colorDarkGray + "#" + colorReset)
 				continue
 			}
@@ -180,7 +162,6 @@ func (c *Client) render() {
 			}
 
 			playerHere := false
-
 			for playerID, pos := range c.players {
 				if pos.col == col && pos.row == row {
 					if playerID == c.playerID {
@@ -188,7 +169,6 @@ func (c *Client) render() {
 					} else {
 						fmt.Print(colorBrightYellow + "P" + colorReset)
 					}
-
 					playerHere = true
 					break
 				}
@@ -198,43 +178,36 @@ func (c *Client) render() {
 				fmt.Print(colorDarkGray + "." + colorReset)
 			}
 		}
-
 		fmt.Print("\r\n")
 	}
 
-	fmt.Print("\r\nArrow keys to move, q to quit\r\n")
+	fmt.Print("\r\nArrow keys to move, space to place trap, q to quit\r\n")
 }
 
-func (c *Client) Join(name string) error {
+func (c *gameClientView) Join(name string) error {
 	response, err := c.grpcClient.Join(
 		context.Background(),
-		&pb.JoinRequest{
-			Name: name,
-		},
+		&pb.JoinRequest{Name: name},
 	)
 	if err != nil {
 		return err
 	}
 
 	c.playerID = response.PlayerId
-	c.width = response.Width
-	c.height = response.Height
+	c.width = int(response.Width)
+	c.height = int(response.Height)
 	return nil
 }
 
-func (c *Client) Move(direction pb.Direction) error {
+func (c *gameClientView) Move(direction pb.Direction) error {
 	_, err := c.grpcClient.Move(
 		context.Background(),
-		&pb.MoveRequest{
-			PlayerId:  c.playerID,
-			Direction: direction,
-		},
+		&pb.MoveRequest{PlayerId: c.playerID, Direction: direction},
 	)
-
 	return err
 }
 
-func (c *Client) PlaceTrap() error {
+func (c *gameClientView) PlaceTrap() error {
 	_, err := c.grpcClient.PlaceTrap(
 		context.Background(),
 		&pb.PlaceTrapRequest{PlayerId: c.playerID},
@@ -242,25 +215,10 @@ func (c *Client) PlaceTrap() error {
 	return err
 }
 
-func (c *Client) SendMessage(message string) error {
-	_, err := c.grpcClient.SendMessage(
-		context.Background(),
-		&pb.SendMessageRequest{
-			PlayerId: c.playerID,
-			Message:  message,
-		},
-	)
-
-	return err
-}
-
-func (c *Client) Leave() error {
+func (c *gameClientView) Leave() error {
 	_, err := c.grpcClient.Leave(
 		context.Background(),
-		&pb.LeaveRequest{
-			PlayerId: c.playerID,
-		},
+		&pb.LeaveRequest{PlayerId: c.playerID},
 	)
-
 	return err
 }

@@ -80,7 +80,7 @@ func (g *gameState) bestSpawn() (position, bool) {
 				continue
 			}
 
-			minDist := g.width * g.height // large sentinel
+			minDist := g.width * g.height
 
 			for _, p := range g.positions {
 				if d := manhattan(candidate, p); d < minDist {

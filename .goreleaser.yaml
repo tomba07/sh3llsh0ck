@@ -5,15 +5,9 @@ before:
     - go mod tidy
 
 builds:
-  - id: server
-    main: ./cmd/server
-    binary: shellfire-server
-    goos: [linux, darwin, windows]
-    goarch: [amd64, arm64]
-
-  - id: client
-    main: ./cmd/client
-    binary: shellfire
+  - id: shellfire
+    main: ./cmd/sh3llsh0ck
+    binary: sh3llsh0ck
     goos: [linux, darwin, windows]
     goarch: [amd64, arm64]
 

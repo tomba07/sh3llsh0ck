@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -13,49 +12,39 @@ import (
 	"google.golang.org/grpc"
 )
 
-type server struct {
+type gameServer struct {
 	pb.UnimplementedChatServiceServer
 
 	mu      sync.Mutex
-	clients map[string]*client
+	clients map[string]*gameClient
 	game    gameState
 }
 
-type client struct {
+type gameClient struct {
 	name     string
 	messages chan *pb.Event
 }
 
-func main() {
-	port := flag.Int("port", 50051, "port to listen on")
-	flag.Parse()
-
-	addr := fmt.Sprintf(":%d", *port)
+func startServer(port int) {
+	addr := fmt.Sprintf(":%d", port)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	grpcServer := grpc.NewServer()
-
-	chatServer := &server{
-		clients: make(map[string]*client),
+	s := &gameServer{
+		clients: make(map[string]*gameClient),
 		game:    newGameState(10, 10),
 	}
-
-	pb.RegisterChatServiceServer(
-		grpcServer,
-		chatServer,
-	)
-
-	fmt.Printf("Server listening on %s\n", addr)
+	pb.RegisterChatServiceServer(grpcServer, s)
 
 	if err := grpcServer.Serve(listener); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinResponse, error) {
+func (s *gameServer) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinResponse, error) {
 	s.mu.Lock()
 
 	if _, exists := s.clients[req.Name]; exists {
@@ -63,14 +52,14 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 		return nil, fmt.Errorf("name %q already taken", req.Name)
 	}
 
-	s.clients[req.Name] = &client{
+	s.clients[req.Name] = &gameClient{
 		name:     req.Name,
 		messages: make(chan *pb.Event, 10),
 	}
 
-	clients := make([]*client, 0, len(s.clients))
-	for _, client := range s.clients {
-		clients = append(clients, client)
+	clients := make([]*gameClient, 0, len(s.clients))
+	for _, c := range s.clients {
+		clients = append(clients, c)
 	}
 
 	best, ok := s.game.bestSpawn()
@@ -79,31 +68,26 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 		return nil, fmt.Errorf("no available spawn positions")
 	}
 
-	// Add existing players
 	for id, pos := range s.game.positions {
 		s.clients[req.Name].messages <- &pb.Event{
 			Type:     pb.EventType_EVENT_TYPE_PLAYER_JOINED,
 			PlayerId: id,
-			Col: int32(pos.col),
-			Row: int32(pos.row),
+			Col:      int32(pos.col),
+			Row:      int32(pos.row),
 		}
 	}
 
 	s.game.positions[req.Name] = best
-
 	s.mu.Unlock()
 
-	message := fmt.Sprintf("%s joined", req.Name)
 	pos := s.game.positions[req.Name]
-	event := &pb.Event{
+	broadcast(clients, &pb.Event{
 		Type:     pb.EventType_EVENT_TYPE_PLAYER_JOINED,
 		PlayerId: req.Name,
-		Message:  message,
-		Col: int32(pos.col),
-		Row: int32(pos.row),
-	}
-
-	broadcast(clients, event)
+		Message:  fmt.Sprintf("%s joined", req.Name),
+		Col:      int32(pos.col),
+		Row:      int32(pos.row),
+	})
 
 	fmt.Printf("%s joined\r\n", req.Name)
 
@@ -114,32 +98,27 @@ func (s *server) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRespons
 	}, nil
 }
 
-func (s *server) Subscribe(
-	req *pb.SubscribeRequest,
-	stream pb.ChatService_SubscribeServer,
-) error {
-	client, joined := s.getClient(req.PlayerId)
+func (s *gameServer) Subscribe(req *pb.SubscribeRequest, stream pb.ChatService_SubscribeServer) error {
+	s.mu.Lock()
+	c, joined := s.clients[req.PlayerId]
+	s.mu.Unlock()
 	if !joined {
 		return fmt.Errorf("player %q is not joined", req.PlayerId)
 	}
 
 	for {
 		select {
-		case message := <-client.messages:
+		case message := <-c.messages:
 			if err := stream.Send(message); err != nil {
 				return err
 			}
-
 		case <-stream.Context().Done():
 			return stream.Context().Err()
 		}
 	}
 }
 
-func (s *server) Move(
-	ctx context.Context,
-	req *pb.MoveRequest,
-) (*pb.MoveResponse, error) {
+func (s *gameServer) Move(ctx context.Context, req *pb.MoveRequest) (*pb.MoveResponse, error) {
 	s.mu.Lock()
 
 	pos, joined := s.game.positions[req.PlayerId]
@@ -159,15 +138,9 @@ func (s *server) Move(
 		pos.col++
 	}
 
-	if pos.col < 0 ||
-		pos.col >= s.game.width ||
-		pos.row < 0 ||
-		pos.row >= s.game.height {
+	if pos.col < 0 || pos.col >= s.game.width || pos.row < 0 || pos.row >= s.game.height {
 		s.mu.Unlock()
-
-		return &pb.MoveResponse{
-			Ok: false,
-		}, nil
+		return &pb.MoveResponse{Ok: false}, nil
 	}
 
 	if s.game.tiles[pos.row][pos.col] == tileWall {
@@ -184,51 +157,47 @@ func (s *server) Move(
 
 	s.game.positions[req.PlayerId] = pos
 
-	clients := make([]*client, 0, len(s.clients))
-	for _, client := range s.clients {
-		clients = append(clients, client)
+	clients := make([]*gameClient, 0, len(s.clients))
+	for _, c := range s.clients {
+		clients = append(clients, c)
 	}
-
 	s.mu.Unlock()
 
-	event := &pb.Event{
+	broadcast(clients, &pb.Event{
 		Type:      pb.EventType_EVENT_TYPE_MOVE,
 		PlayerId:  req.PlayerId,
 		Direction: req.Direction,
-		Col: int32(pos.col),
-		Row: int32(pos.row),
-	}
-
-	broadcast(clients, event)
+		Col:       int32(pos.col),
+		Row:       int32(pos.row),
+	})
 
 	return &pb.MoveResponse{Ok: true}, nil
 }
 
-func (s *server) SendMessage(
-	ctx context.Context,
-	req *pb.SendMessageRequest,
-) (*pb.SendMessageResponse, error) {
-	if _, joined := s.getClient(req.PlayerId); !joined {
+func (s *gameServer) SendMessage(ctx context.Context, req *pb.SendMessageRequest) (*pb.SendMessageResponse, error) {
+	s.mu.Lock()
+	_, joined := s.clients[req.PlayerId]
+	clients := make([]*gameClient, 0, len(s.clients))
+	for _, c := range s.clients {
+		clients = append(clients, c)
+	}
+	s.mu.Unlock()
+
+	if !joined {
 		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
 	}
 
-	event := &pb.Event{
+	broadcast(clients, &pb.Event{
 		Type:     pb.EventType_EVENT_TYPE_CHAT,
 		PlayerId: req.PlayerId,
 		Message:  req.Message,
-	}
-
-	broadcast(s.snapshotClients(), event)
+	})
 
 	fmt.Printf("[%s] %s\r\n", req.PlayerId, req.Message)
-
 	return &pb.SendMessageResponse{Ok: true}, nil
 }
 
-func (s *server) Leave(
-	ctx context.Context,
-	req *pb.LeaveRequest,
-) (*pb.LeaveResponse, error) {
+func (s *gameServer) Leave(ctx context.Context, req *pb.LeaveRequest) (*pb.LeaveResponse, error) {
 	s.mu.Lock()
 
 	if _, joined := s.clients[req.PlayerId]; !joined {
@@ -237,41 +206,28 @@ func (s *server) Leave(
 	}
 
 	delete(s.clients, req.PlayerId)
-
-	clients := make([]*client, 0, len(s.clients))
-	for _, client := range s.clients {
-		clients = append(clients, client)
-	}
-
 	delete(s.game.positions, req.PlayerId)
 
+	clients := make([]*gameClient, 0, len(s.clients))
+	for _, c := range s.clients {
+		clients = append(clients, c)
+	}
 	s.mu.Unlock()
 
-	message := fmt.Sprintf("%s left", req.PlayerId)
-
-	event := &pb.Event{
+	broadcast(clients, &pb.Event{
 		Type:     pb.EventType_EVENT_TYPE_PLAYER_LEFT,
 		PlayerId: req.PlayerId,
-		Message:  message,
-	}
-
-	broadcast(clients, event)
+		Message:  fmt.Sprintf("%s left", req.PlayerId),
+	})
 
 	fmt.Printf("%s left\r\n", req.PlayerId)
-
-	return &pb.LeaveResponse{
-		Ok: true,
-	}, nil
+	return &pb.LeaveResponse{Ok: true}, nil
 }
 
-func (s *server) PlaceTrap(
-	ctx context.Context,
-	req *pb.PlaceTrapRequest,
-) (*pb.PlaceTrapResponse, error) {
+func (s *gameServer) PlaceTrap(ctx context.Context, req *pb.PlaceTrapRequest) (*pb.PlaceTrapResponse, error) {
 	s.mu.Lock()
-	_, joined := s.game.positions[req.PlayerId]
 
-	if !joined {
+	if _, joined := s.game.positions[req.PlayerId]; !joined {
 		s.mu.Unlock()
 		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
 	}
@@ -282,82 +238,61 @@ func (s *server) PlaceTrap(
 		return &pb.PlaceTrapResponse{Ok: false}, nil
 	}
 
-	clients := make([]*client, 0, len(s.clients))
-	for _, client := range s.clients {
-		clients = append(clients, client)
+	clients := make([]*gameClient, 0, len(s.clients))
+	for _, c := range s.clients {
+		clients = append(clients, c)
 	}
+	s.mu.Unlock()
 
-	event := &pb.Event{
+	broadcast(clients, &pb.Event{
 		Type:     pb.EventType_EVENT_TYPE_TRAP_PLACED,
 		PlayerId: req.PlayerId,
-		Col: int32(t.col),
-		Row: int32(t.row),
-	}
+		Col:      int32(t.col),
+		Row:      int32(t.row),
+	})
 
-	s.mu.Unlock()
-	broadcast(clients, event)
 	s.scheduleTrap(t)
 	return &pb.PlaceTrapResponse{Ok: true}, nil
 }
 
-func (s *server) scheduleTrap(t trap) {
+func (s *gameServer) scheduleTrap(t trap) {
 	go func() {
 		time.Sleep(3 * time.Second)
 
 		s.mu.Lock()
 		hit, respawns := s.game.detonate(t)
-		allClients := make([]*client, 0, len(s.clients))
+		clients := make([]*gameClient, 0, len(s.clients))
 		for _, c := range s.clients {
-			allClients = append(allClients, c)
+			clients = append(clients, c)
 		}
 		s.mu.Unlock()
 
-		broadcast(allClients, &pb.Event{
+		broadcast(clients, &pb.Event{
 			Type:        pb.EventType_EVENT_TYPE_TRAP_TRIGGERED,
 			PlayerId:    t.ownerID,
-			Col: int32(t.col),
-			Row: int32(t.row),
+			Col:         int32(t.col),
+			Row:         int32(t.row),
 			BlastRadius: int32(blastRadius),
 		})
 		for _, id := range hit {
-			broadcast(allClients, &pb.Event{
+			broadcast(clients, &pb.Event{
 				Type:     pb.EventType_EVENT_TYPE_CHAT,
 				PlayerId: id,
 				Message:  fmt.Sprintf("%s was hit by %s's trap", id, t.ownerID),
 			})
 			newPos := respawns[id]
-			broadcast(allClients, &pb.Event{
+			broadcast(clients, &pb.Event{
 				Type:     pb.EventType_EVENT_TYPE_PLAYER_JOINED,
 				PlayerId: id,
-				Col: int32(newPos.col),
-				Row: int32(newPos.row),
+				Col:      int32(newPos.col),
+				Row:      int32(newPos.row),
 			})
 		}
 	}()
 }
 
-func broadcast(clients []*client, event *pb.Event) {
-	for _, client := range clients {
-		client.messages <- event
+func broadcast(clients []*gameClient, event *pb.Event) {
+	for _, c := range clients {
+		c.messages <- event
 	}
-}
-
-func (s *server) snapshotClients() []*client {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	clients := make([]*client, 0, len(s.clients))
-	for _, client := range s.clients {
-		clients = append(clients, client)
-	}
-
-	return clients
-}
-
-func (s *server) getClient(playerID string) (*client, bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	client, joined := s.clients[playerID]
-	return client, joined
 }

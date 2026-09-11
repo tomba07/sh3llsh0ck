@@ -2,11 +2,11 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	pb "github.com/tomba07/bombshell/proto"
 	"golang.org/x/term"
@@ -15,31 +15,42 @@ import (
 )
 
 func main() {
-	addr := flag.String("server", "localhost:50051", "server address (host:port)")
-	flag.Parse()
+	choice := selectOption("sh3llsh0ck", []string{"Host a game", "Join a game"})
 
-	conn, err := grpc.NewClient(
-		*addr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	var addr string
+	if choice == 0 {
+		go startServer(50051)
+		time.Sleep(100 * time.Millisecond)
+		addr = "localhost:50051"
+	} else {
+		addr = readLine("Server address [localhost:50051]: ")
+		if addr == "" {
+			addr = "localhost:50051"
+		}
+	}
+
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	check(err)
 	defer conn.Close()
 
-	client := &Client{
+	client := &gameClientView{
 		grpcClient: pb.NewChatServiceClient(conn),
 		players:    make(map[string]position),
-		traps:      make(map[string]trap),
+		traps:      make(map[string]trapView),
 		blasts:     make(map[string][]position),
 	}
 
-	scanner := bufio.NewScanner(os.Stdin)
+	name := readLine("Enter your name: ")
+	for name == "" {
+		name = readLine("Name cannot be empty. Enter your name: ")
+	}
 
-	name := readName(scanner)
 	check(client.Join(name))
-	defer leaveClient(client)
-
-	fmt.Printf("Joined as %s\n", client.playerID)
-	fmt.Println("Use arrow keys to move, q to quit")
+	defer func() {
+		if err := client.Leave(); err != nil {
+			log.Printf("failed to leave: %v\n", err)
+		}
+	}()
 
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 	check(err)
@@ -53,39 +64,30 @@ func main() {
 
 	fmt.Print("\033[2J\033[H")
 
-	buffer := make([]byte, 1)
-
+	buf := make([]byte, 1)
 	for {
-		_, err := os.Stdin.Read(buffer)
+		_, err := os.Stdin.Read(buf)
 		check(err)
 
-		switch buffer[0] {
+		switch buf[0] {
 		case 'q':
 			return
-
 		case ' ':
 			check(client.PlaceTrap())
-
-		case 27: // ESC
-			sequence := make([]byte, 2)
-
-			_, err := os.Stdin.Read(sequence)
+		case 27:
+			seq := make([]byte, 2)
+			_, err := os.Stdin.Read(seq)
 			check(err)
-
-			if sequence[0] != '[' {
+			if seq[0] != '[' {
 				continue
 			}
-
-			switch sequence[1] {
+			switch seq[1] {
 			case 'A':
 				check(client.Move(pb.Direction_DIRECTION_UP))
-
 			case 'B':
 				check(client.Move(pb.Direction_DIRECTION_DOWN))
-
 			case 'C':
 				check(client.Move(pb.Direction_DIRECTION_RIGHT))
-
 			case 'D':
 				check(client.Move(pb.Direction_DIRECTION_LEFT))
 			}
@@ -93,28 +95,13 @@ func main() {
 	}
 }
 
-func readName(scanner *bufio.Scanner) string {
-	for {
-		fmt.Print("Enter your name: ")
-
-		if !scanner.Scan() {
-			check(scanner.Err())
-			log.Fatal("no name entered")
-		}
-
-		name := strings.TrimSpace(scanner.Text())
-		if name != "" {
-			return name
-		}
-
-		fmt.Println("Name cannot be empty.")
+func readLine(prompt string) string {
+	fmt.Print(prompt)
+	scanner := bufio.NewScanner(os.Stdin)
+	if scanner.Scan() {
+		return strings.TrimSpace(scanner.Text())
 	}
-}
-
-func leaveClient(client *Client) {
-	if err := client.Leave(); err != nil {
-		log.Printf("failed to leave: %v\n", err)
-	}
+	return ""
 }
 
 func check(err error) {
