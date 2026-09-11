@@ -1,0 +1,36 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: server
+    main: ./cmd/server
+    binary: shellfire-server
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+
+  - id: client
+    main: ./cmd/client
+    binary: shellfire
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+
+archives:
+  - formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - src: README*
+        info:
+          owner: root
+          group: root
+
+checksum:
+  name_template: checksums.txt
+
+release:
+  draft: true
