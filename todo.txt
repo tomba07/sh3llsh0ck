@@ -1,11 +1,18 @@
-Score
-
 Exit improvement
-
-Respawn delay
-
-Trap delays
 
 Server+Client Mode
 
 Remote Connections
+
+Respawn delay
+
+Score
+
+Multi-traps
+
+Power-ups
+ - more traps, larger radius
+
+Stats
+
+Trap delays
