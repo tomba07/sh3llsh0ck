@@ -31,6 +31,7 @@ const (
 	EventType_EVENT_TYPE_MOVE           EventType = 4
 	EventType_EVENT_TYPE_TRAP_PLACED    EventType = 5
 	EventType_EVENT_TYPE_TRAP_TRIGGERED EventType = 6
+	EventType_EVENT_TYPE_SCORE_UPDATE   EventType = 7
 )
 
 // Enum value maps for EventType.
@@ -43,6 +44,7 @@ var (
 		4: "EVENT_TYPE_MOVE",
 		5: "EVENT_TYPE_TRAP_PLACED",
 		6: "EVENT_TYPE_TRAP_TRIGGERED",
+		7: "EVENT_TYPE_SCORE_UPDATE",
 	}
 	EventType_value = map[string]int32{
 		"EVENT_TYPE_UNSPECIFIED":    0,
@@ -52,6 +54,7 @@ var (
 		"EVENT_TYPE_MOVE":           4,
 		"EVENT_TYPE_TRAP_PLACED":    5,
 		"EVENT_TYPE_TRAP_TRIGGERED": 6,
+		"EVENT_TYPE_SCORE_UPDATE":   7,
 	}
 )
 
@@ -146,6 +149,7 @@ type Event struct {
 	Col           int32                  `protobuf:"varint,5,opt,name=col,proto3" json:"col,omitempty"`
 	Row           int32                  `protobuf:"varint,6,opt,name=row,proto3" json:"row,omitempty"`
 	BlastRadius   int32                  `protobuf:"varint,7,opt,name=blast_radius,json=blastRadius,proto3" json:"blast_radius,omitempty"`
+	Score         int32                  `protobuf:"varint,8,opt,name=score,proto3" json:"score,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -225,6 +229,13 @@ func (x *Event) GetRow() int32 {
 func (x *Event) GetBlastRadius() int32 {
 	if x != nil {
 		return x.BlastRadius
+	}
+	return 0
+}
+
+func (x *Event) GetScore() int32 {
+	if x != nil {
+		return x.Score
 	}
 	return 0
 }
@@ -749,7 +760,7 @@ var File_proto_chat_proto protoreflect.FileDescriptor
 
 const file_proto_chat_proto_rawDesc = "" +
 	"\n" +
-	"\x10proto/chat.proto\x12\x04chat\"\xd9\x01\n" +
+	"\x10proto/chat.proto\x12\x04chat\"\xef\x01\n" +
 	"\x05Event\x12#\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x0f.chat.EventTypeR\x04type\x12\x1b\n" +
 	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\x12\x18\n" +
@@ -757,7 +768,8 @@ const file_proto_chat_proto_rawDesc = "" +
 	"\tdirection\x18\x04 \x01(\x0e2\x0f.chat.DirectionR\tdirection\x12\x10\n" +
 	"\x03col\x18\x05 \x01(\x05R\x03col\x12\x10\n" +
 	"\x03row\x18\x06 \x01(\x05R\x03row\x12!\n" +
-	"\fblast_radius\x18\a \x01(\x05R\vblastRadius\"!\n" +
+	"\fblast_radius\x18\a \x01(\x05R\vblastRadius\x12\x14\n" +
+	"\x05score\x18\b \x01(\x05R\x05score\"!\n" +
 	"\vJoinRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\"Y\n" +
 	"\fJoinResponse\x12\x1b\n" +
@@ -783,7 +795,7 @@ const file_proto_chat_proto_rawDesc = "" +
 	"\x10PlaceTrapRequest\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\"#\n" +
 	"\x11PlaceTrapResponse\x12\x0e\n" +
-	"\x02ok\x18\x01 \x01(\bR\x02ok*\xc6\x01\n" +
+	"\x02ok\x18\x01 \x01(\bR\x02ok*\xe3\x01\n" +
 	"\tEventType\x12\x1a\n" +
 	"\x16EVENT_TYPE_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fEVENT_TYPE_CHAT\x10\x01\x12\x1c\n" +
@@ -791,7 +803,8 @@ const file_proto_chat_proto_rawDesc = "" +
 	"\x16EVENT_TYPE_PLAYER_LEFT\x10\x03\x12\x13\n" +
 	"\x0fEVENT_TYPE_MOVE\x10\x04\x12\x1a\n" +
 	"\x16EVENT_TYPE_TRAP_PLACED\x10\x05\x12\x1d\n" +
-	"\x19EVENT_TYPE_TRAP_TRIGGERED\x10\x06*u\n" +
+	"\x19EVENT_TYPE_TRAP_TRIGGERED\x10\x06\x12\x1b\n" +
+	"\x17EVENT_TYPE_SCORE_UPDATE\x10\a*u\n" +
 	"\tDirection\x12\x19\n" +
 	"\x15DIRECTION_UNSPECIFIED\x10\x00\x12\x10\n" +
 	"\fDIRECTION_UP\x10\x01\x12\x12\n" +

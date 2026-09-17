@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	pb "github.com/tomba07/bombshell/proto"
@@ -16,6 +17,7 @@ type gameClientView struct {
 	players    map[string]position
 	traps      map[string]trapView
 	blasts     map[string][]position
+	scores     map[string]int
 }
 
 type trapView struct {
@@ -96,7 +98,10 @@ func (c *gameClientView) handleEvent(event *pb.Event) {
 			}
 		}(event.PlayerId)
 
-	case pb.EventType_EVENT_TYPE_TRAP_TRIGGERED:
+	case pb.EventType_EVENT_TYPE_SCORE_UPDATE:
+		c.scores[event.PlayerId] = int(event.Score)
+
+
 		var tiles []position
 		radius := int(event.BlastRadius)
 		tiles = append(tiles, position{col: int(event.Col), row: int(event.Row)})
@@ -123,6 +128,9 @@ func (c *gameClientView) handleEvent(event *pb.Event) {
 }
 
 func (c *gameClientView) render() {
+	top := c.topScorers(3)
+	boardWidth := c.width // one char per cell
+
 	fmt.Print("\033[H")
 
 	for row := 0; row < c.height; row++ {
@@ -178,10 +186,54 @@ func (c *gameClientView) render() {
 				fmt.Print(colorDarkGray + "." + colorReset)
 			}
 		}
+
+		// leaderboard column to the right
+		sideCol := boardWidth + 2
+		switch row {
+		case 0:
+			fmt.Printf("\033[%d;%dH%s", row+1, sideCol, colorBrightGreen+"Top Players"+colorReset)
+		case 1:
+			fmt.Printf("\033[%d;%dH%s", row+1, sideCol, colorDarkGray+"───────────"+colorReset)
+		default:
+			i := row - 2
+			if i < len(top) {
+				name, score := top[i].name, top[i].score
+				medal := " "
+				switch i {
+				case 0:
+					medal = colorBrightYellow + "1" + colorReset
+				case 1:
+					medal = colorDarkGray + "2" + colorReset
+				case 2:
+					medal = colorBrightRed + "3" + colorReset
+				}
+				fmt.Printf("\033[%d;%dH%s %-8s %d", row+1, sideCol, medal, name, score)
+			}
+		}
+
 		fmt.Print("\r\n")
 	}
 
 	fmt.Print("\r\nArrow keys to move, space to place trap, q to quit")
+}
+
+type scorerEntry struct {
+	name  string
+	score int
+}
+
+func (c *gameClientView) topScorers(n int) []scorerEntry {
+	entries := make([]scorerEntry, 0, len(c.scores))
+	for name, score := range c.scores {
+		entries = append(entries, scorerEntry{name, score})
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].score > entries[j].score
+	})
+	if len(entries) > n {
+		entries = entries[:n]
+	}
+	return entries
 }
 
 func (c *gameClientView) Join(name string) error {

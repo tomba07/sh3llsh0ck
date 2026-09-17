@@ -18,6 +18,7 @@ type gameServer struct {
 	mu      sync.Mutex
 	clients map[string]*gameClient
 	game    gameState
+	scores  map[string]int
 }
 
 type gameClient struct {
@@ -36,6 +37,7 @@ func startServer(port int) {
 	s := &gameServer{
 		clients: make(map[string]*gameClient),
 		game:    newGameState(10, 10),
+		scores:  make(map[string]int),
 	}
 	pb.RegisterChatServiceServer(grpcServer, s)
 
@@ -261,6 +263,8 @@ func (s *gameServer) scheduleTrap(t trap) {
 
 		s.mu.Lock()
 		hit, respawns := s.game.detonate(t)
+		s.scores[t.ownerID] += len(hit)
+		score := s.scores[t.ownerID]
 		clients := make([]*gameClient, 0, len(s.clients))
 		for _, c := range s.clients {
 			clients = append(clients, c)
@@ -274,6 +278,13 @@ func (s *gameServer) scheduleTrap(t trap) {
 			Row:         int32(t.row),
 			BlastRadius: int32(blastRadius),
 		})
+		if len(hit) > 0 {
+			broadcast(clients, &pb.Event{
+				Type:     pb.EventType_EVENT_TYPE_SCORE_UPDATE,
+				PlayerId: t.ownerID,
+				Score:    int32(score),
+			})
+		}
 		for _, id := range hit {
 			broadcast(clients, &pb.Event{
 				Type:     pb.EventType_EVENT_TYPE_CHAT,

@@ -38,6 +38,7 @@ func main() {
 		players:    make(map[string]position),
 		traps:      make(map[string]trapView),
 		blasts:     make(map[string][]position),
+		scores:     make(map[string]int),
 	}
 
 	name := readLine("Enter your name: ")

@@ -12,6 +12,7 @@ enum EventType {
   EVENT_TYPE_MOVE = 4;
   EVENT_TYPE_TRAP_PLACED = 5;
   EVENT_TYPE_TRAP_TRIGGERED = 6;
+  EVENT_TYPE_SCORE_UPDATE = 7;
 }
 
 enum Direction {
@@ -39,6 +40,7 @@ message Event {
   int32 col = 5;
   int32 row = 6;
   int32 blast_radius = 7;
+  int32 score = 8;
 }
 
 message JoinRequest {
