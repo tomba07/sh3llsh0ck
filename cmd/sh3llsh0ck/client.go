@@ -181,7 +181,7 @@ func (c *gameClientView) render() {
 		fmt.Print("\r\n")
 	}
 
-	fmt.Print("\r\nArrow keys to move, space to place trap, q to quit\r\n")
+	fmt.Print("\r\nArrow keys to move, space to place trap, q to quit")
 }
 
 func (c *gameClientView) Join(name string) error {

@@ -56,13 +56,14 @@ func main() {
 	check(err)
 	defer term.Restore(int(os.Stdin.Fd()), oldState)
 
+	fmt.Print("\033[?1049h\033[2J\033[H") // enter alternate screen
+	defer fmt.Print("\033[?1049l")        // exit alternate screen
+
 	go func() {
 		if err := client.Subscribe(); err != nil {
 			log.Printf("subscribe ended: %v\r\n", err)
 		}
 	}()
-
-	fmt.Print("\033[2J\033[H")
 
 	buf := make([]byte, 1)
 	for {
