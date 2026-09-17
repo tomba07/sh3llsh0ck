@@ -263,7 +263,13 @@ func (s *gameServer) scheduleTrap(t trap) {
 
 		s.mu.Lock()
 		hit, respawns := s.game.detonate(t)
-		s.scores[t.ownerID] += len(hit)
+		kills := 0
+		for _, id := range hit {
+			if id != t.ownerID {
+				kills++
+			}
+		}
+		s.scores[t.ownerID] += kills
 		score := s.scores[t.ownerID]
 		clients := make([]*gameClient, 0, len(s.clients))
 		for _, c := range s.clients {
@@ -278,7 +284,7 @@ func (s *gameServer) scheduleTrap(t trap) {
 			Row:         int32(t.row),
 			BlastRadius: int32(blastRadius),
 		})
-		if len(hit) > 0 {
+		if kills > 0 {
 			broadcast(clients, &pb.Event{
 				Type:     pb.EventType_EVENT_TYPE_SCORE_UPDATE,
 				PlayerId: t.ownerID,

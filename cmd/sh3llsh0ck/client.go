@@ -101,7 +101,7 @@ func (c *gameClientView) handleEvent(event *pb.Event) {
 	case pb.EventType_EVENT_TYPE_SCORE_UPDATE:
 		c.scores[event.PlayerId] = int(event.Score)
 
-
+	case pb.EventType_EVENT_TYPE_TRAP_TRIGGERED:
 		var tiles []position
 		radius := int(event.BlastRadius)
 		tiles = append(tiles, position{col: int(event.Col), row: int(event.Row)})
