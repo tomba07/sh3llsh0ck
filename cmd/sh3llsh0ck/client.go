@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"sync"
 	"time"
 
 	pb "github.com/tomba07/bombshell/proto"
 )
 
 type gameClientView struct {
+	mu         sync.Mutex
 	grpcClient pb.ChatServiceClient
 	playerID   string
 	width      int
@@ -18,6 +20,7 @@ type gameClientView struct {
 	traps      map[string]trapView
 	blasts     map[string][]position
 	scores     map[string]int
+	trapCancel map[string]context.CancelFunc
 }
 
 type trapView struct {
@@ -53,6 +56,7 @@ func (c *gameClientView) Subscribe() error {
 }
 
 func (c *gameClientView) handleEvent(event *pb.Event) {
+	c.mu.Lock()
 	switch event.Type {
 	case pb.EventType_EVENT_TYPE_PLAYER_JOINED:
 		c.players[event.PlayerId] = position{col: int(event.Col), row: int(event.Row)}
@@ -67,41 +71,66 @@ func (c *gameClientView) handleEvent(event *pb.Event) {
 		// ignore for rendering
 
 	case pb.EventType_EVENT_TYPE_TRAP_PLACED:
-		c.traps[event.PlayerId] = trapView{
+		trapID := event.TrapId
+		if cancel, ok := c.trapCancel[trapID]; ok {
+			cancel()
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		c.trapCancel[trapID] = cancel
+		c.traps[trapID] = trapView{
 			pos:   position{col: int(event.Col), row: int(event.Row)},
 			color: colorBrightMagenta,
 		}
-		go func(ownerID string) {
-			for range 3 {
-				time.Sleep(250 * time.Millisecond)
-				t := c.traps[ownerID]
+		c.mu.Unlock()
+		go func(tid string) {
+			blink := func(d time.Duration) bool {
+				time.Sleep(d)
+				c.mu.Lock()
+				if ctx.Err() != nil {
+					c.mu.Unlock()
+					return false
+				}
+				t := c.traps[tid]
 				t.color = colorBrightYellow
-				c.traps[ownerID] = t
+				c.traps[tid] = t
 				c.render()
-				time.Sleep(250 * time.Millisecond)
-				t = c.traps[ownerID]
+				c.mu.Unlock()
+
+				time.Sleep(d)
+				c.mu.Lock()
+				if ctx.Err() != nil {
+					c.mu.Unlock()
+					return false
+				}
+				t = c.traps[tid]
 				t.color = colorBrightMagenta
-				c.traps[ownerID] = t
+				c.traps[tid] = t
 				c.render()
+				c.mu.Unlock()
+				return true
+			}
+			for range 3 {
+				if !blink(200 * time.Millisecond) {
+					return
+				}
 			}
 			for range 5 {
-				time.Sleep(75 * time.Millisecond)
-				t := c.traps[ownerID]
-				t.color = colorBrightYellow
-				c.traps[ownerID] = t
-				c.render()
-				time.Sleep(75 * time.Millisecond)
-				t = c.traps[ownerID]
-				t.color = colorBrightMagenta
-				c.traps[ownerID] = t
-				c.render()
+				if !blink(60 * time.Millisecond) {
+					return
+				}
 			}
-		}(event.PlayerId)
+		}(trapID)
+		return
 
 	case pb.EventType_EVENT_TYPE_SCORE_UPDATE:
 		c.scores[event.PlayerId] = int(event.Score)
 
 	case pb.EventType_EVENT_TYPE_TRAP_TRIGGERED:
+		trapID := event.TrapId
+		if cancel, ok := c.trapCancel[trapID]; ok {
+			cancel()
+			delete(c.trapCancel, trapID)
+		}
 		var tiles []position
 		radius := int(event.BlastRadius)
 		tiles = append(tiles, position{col: int(event.Col), row: int(event.Row)})
@@ -113,18 +142,22 @@ func (c *gameClientView) handleEvent(event *pb.Event) {
 				position{col: int(event.Col), row: int(event.Row) - i},
 			)
 		}
-		delete(c.traps, event.PlayerId)
-		c.blasts[event.PlayerId] = tiles
+		delete(c.traps, trapID)
+		c.blasts[trapID] = tiles
 		c.render()
+		c.mu.Unlock()
 		go func() {
 			time.Sleep(1000 * time.Millisecond)
-			delete(c.blasts, event.PlayerId)
+			c.mu.Lock()
+			delete(c.blasts, trapID)
 			c.render()
+			c.mu.Unlock()
 		}()
 		return
 	}
 
 	c.render()
+	c.mu.Unlock()
 }
 
 func (c *gameClientView) render() {

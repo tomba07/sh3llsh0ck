@@ -150,6 +150,7 @@ type Event struct {
 	Row           int32                  `protobuf:"varint,6,opt,name=row,proto3" json:"row,omitempty"`
 	BlastRadius   int32                  `protobuf:"varint,7,opt,name=blast_radius,json=blastRadius,proto3" json:"blast_radius,omitempty"`
 	Score         int32                  `protobuf:"varint,8,opt,name=score,proto3" json:"score,omitempty"`
+	TrapId        string                 `protobuf:"bytes,9,opt,name=trap_id,json=trapId,proto3" json:"trap_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -238,6 +239,13 @@ func (x *Event) GetScore() int32 {
 		return x.Score
 	}
 	return 0
+}
+
+func (x *Event) GetTrapId() string {
+	if x != nil {
+		return x.TrapId
+	}
+	return ""
 }
 
 type JoinRequest struct {
@@ -715,6 +723,7 @@ func (x *PlaceTrapRequest) GetPlayerId() string {
 type PlaceTrapResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Ok            bool                   `protobuf:"varint,1,opt,name=ok,proto3" json:"ok,omitempty"`
+	TrapId        string                 `protobuf:"bytes,2,opt,name=trap_id,json=trapId,proto3" json:"trap_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -756,11 +765,18 @@ func (x *PlaceTrapResponse) GetOk() bool {
 	return false
 }
 
+func (x *PlaceTrapResponse) GetTrapId() string {
+	if x != nil {
+		return x.TrapId
+	}
+	return ""
+}
+
 var File_proto_chat_proto protoreflect.FileDescriptor
 
 const file_proto_chat_proto_rawDesc = "" +
 	"\n" +
-	"\x10proto/chat.proto\x12\x04chat\"\xef\x01\n" +
+	"\x10proto/chat.proto\x12\x04chat\"\x88\x02\n" +
 	"\x05Event\x12#\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x0f.chat.EventTypeR\x04type\x12\x1b\n" +
 	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\x12\x18\n" +
@@ -769,7 +785,8 @@ const file_proto_chat_proto_rawDesc = "" +
 	"\x03col\x18\x05 \x01(\x05R\x03col\x12\x10\n" +
 	"\x03row\x18\x06 \x01(\x05R\x03row\x12!\n" +
 	"\fblast_radius\x18\a \x01(\x05R\vblastRadius\x12\x14\n" +
-	"\x05score\x18\b \x01(\x05R\x05score\"!\n" +
+	"\x05score\x18\b \x01(\x05R\x05score\x12\x17\n" +
+	"\atrap_id\x18\t \x01(\tR\x06trapId\"!\n" +
 	"\vJoinRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\"Y\n" +
 	"\fJoinResponse\x12\x1b\n" +
@@ -793,9 +810,10 @@ const file_proto_chat_proto_rawDesc = "" +
 	"\fMoveResponse\x12\x0e\n" +
 	"\x02ok\x18\x01 \x01(\bR\x02ok\"/\n" +
 	"\x10PlaceTrapRequest\x12\x1b\n" +
-	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\"#\n" +
+	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\"<\n" +
 	"\x11PlaceTrapResponse\x12\x0e\n" +
-	"\x02ok\x18\x01 \x01(\bR\x02ok*\xe3\x01\n" +
+	"\x02ok\x18\x01 \x01(\bR\x02ok\x12\x17\n" +
+	"\atrap_id\x18\x02 \x01(\tR\x06trapId*\xe3\x01\n" +
 	"\tEventType\x12\x1a\n" +
 	"\x16EVENT_TYPE_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fEVENT_TYPE_CHAT\x10\x01\x12\x1c\n" +

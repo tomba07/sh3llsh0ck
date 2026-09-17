@@ -22,7 +22,10 @@ type gameState struct {
 	traps     map[string]trap
 }
 
+const maxTrapsPerPlayer = 3
+
 type trap struct {
+	id      string
 	col     int
 	row     int
 	ownerID string
@@ -97,26 +100,33 @@ func (g *gameState) bestSpawn() (position, bool) {
 	return best, bestDist != -1
 }
 
-func (g *gameState) placeTrap(playerID string) (trap, bool) {
+func (g *gameState) placeTrap(playerID, trapID string) (trap, bool) {
 	pos, ok := g.positions[playerID]
 	if !ok {
 		return trap{}, false
 	}
 
+	count := 0
 	for _, t := range g.traps {
 		if t.col == pos.col && t.row == pos.row {
 			return trap{}, false
 		}
+		if t.ownerID == playerID {
+			count++
+		}
+	}
+	if count >= maxTrapsPerPlayer {
+		return trap{}, false
 	}
 
-	t := trap{col: pos.col, row: pos.row, ownerID: playerID}
-	g.traps[playerID] = t
+	t := trap{id: trapID, col: pos.col, row: pos.row, ownerID: playerID}
+	g.traps[trapID] = t
 
 	return t, true
 }
 
 func (g *gameState) detonate(t trap) (hit []string, respawns map[string]position) {
-	delete(g.traps, t.ownerID)
+	delete(g.traps, t.id)
 
 	respawns = make(map[string]position)
 	for id, p := range g.positions {

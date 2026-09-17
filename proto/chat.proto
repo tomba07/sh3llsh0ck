@@ -41,6 +41,7 @@ message Event {
   int32 row = 6;
   int32 blast_radius = 7;
   int32 score = 8;
+  string trap_id = 9;
 }
 
 message JoinRequest {
@@ -89,4 +90,5 @@ message PlaceTrapRequest {
 
 message PlaceTrapResponse {
   bool ok = 1;
+  string trap_id = 2;
 }

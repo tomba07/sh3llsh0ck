@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	pb "github.com/tomba07/bombshell/proto"
@@ -24,6 +25,12 @@ type gameServer struct {
 type gameClient struct {
 	name     string
 	messages chan *pb.Event
+}
+
+var trapCounter atomic.Int64
+
+func nextTrapID() string {
+	return fmt.Sprintf("trap-%d", trapCounter.Add(1))
 }
 
 func startServer(port int) {
@@ -234,7 +241,8 @@ func (s *gameServer) PlaceTrap(ctx context.Context, req *pb.PlaceTrapRequest) (*
 		return nil, fmt.Errorf("player %q is not joined", req.PlayerId)
 	}
 
-	t, ok := s.game.placeTrap(req.PlayerId)
+	trapID := nextTrapID()
+	t, ok := s.game.placeTrap(req.PlayerId, trapID)
 	if !ok {
 		s.mu.Unlock()
 		return &pb.PlaceTrapResponse{Ok: false}, nil
@@ -249,17 +257,18 @@ func (s *gameServer) PlaceTrap(ctx context.Context, req *pb.PlaceTrapRequest) (*
 	broadcast(clients, &pb.Event{
 		Type:     pb.EventType_EVENT_TYPE_TRAP_PLACED,
 		PlayerId: req.PlayerId,
+		TrapId:   trapID,
 		Col:      int32(t.col),
 		Row:      int32(t.row),
 	})
 
 	s.scheduleTrap(t)
-	return &pb.PlaceTrapResponse{Ok: true}, nil
+	return &pb.PlaceTrapResponse{Ok: true, TrapId: trapID}, nil
 }
 
 func (s *gameServer) scheduleTrap(t trap) {
 	go func() {
-		time.Sleep(3 * time.Second)
+		time.Sleep(2 * time.Second)
 
 		s.mu.Lock()
 		hit, respawns := s.game.detonate(t)
@@ -280,6 +289,7 @@ func (s *gameServer) scheduleTrap(t trap) {
 		broadcast(clients, &pb.Event{
 			Type:        pb.EventType_EVENT_TYPE_TRAP_TRIGGERED,
 			PlayerId:    t.ownerID,
+			TrapId:      t.id,
 			Col:         int32(t.col),
 			Row:         int32(t.row),
 			BlastRadius: int32(blastRadius),
