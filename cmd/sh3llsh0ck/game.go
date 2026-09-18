@@ -48,6 +48,37 @@ func newGameState(width, height int) gameState {
 		tiles[row][width-1] = tileWall
 	}
 
+	// symmetric interior walls
+	for _, w := range [][2]int{
+		// top-left L-cluster
+		{5, 3}, {6, 3}, {7, 3}, {5, 4},
+		// top-right L-cluster (mirrored)
+		{22, 3}, {23, 3}, {24, 3}, {24, 4},
+		// bottom-left L-cluster
+		{5, 12}, {6, 12}, {7, 12}, {5, 11},
+		// bottom-right L-cluster
+		{22, 12}, {23, 12}, {24, 12}, {24, 11},
+		// mid-left vertical wall (corridor chokepoint)
+		{9, 4}, {9, 5}, {9, 6}, {9, 7},
+		// mid-right vertical wall
+		{20, 4}, {20, 5}, {20, 6}, {20, 7},
+		// mid-left lower vertical wall
+		{9, 9}, {9, 10}, {9, 11},
+		// mid-right lower vertical wall
+		{20, 9}, {20, 10}, {20, 11},
+		// center block
+		{14, 6}, {15, 6}, {14, 7}, {15, 7},
+		{14, 8}, {15, 8}, {14, 9}, {15, 9},
+		// top-center horizontal bars
+		{11, 3}, {12, 3}, {13, 3},
+		{16, 3}, {17, 3}, {18, 3},
+		// bottom-center horizontal bars
+		{11, 12}, {12, 12}, {13, 12},
+		{16, 12}, {17, 12}, {18, 12},
+	} {
+		tiles[w[1]][w[0]] = tileWall
+	}
+
 	return gameState{
 		width:     width,
 		height:    height,
@@ -58,10 +89,6 @@ func newGameState(width, height int) gameState {
 }
 
 func (g *gameState) bestSpawn() (position, bool) {
-	if len(g.positions) == 0 {
-		return position{col: g.width / 2, row: g.height / 2}, true
-	}
-
 	best := position{}
 	bestDist := -1
 
@@ -71,24 +98,26 @@ func (g *gameState) bestSpawn() (position, bool) {
 				continue
 			}
 			candidate := position{col: col, row: row}
-			alreadyOccupied := false
 
+			occupied := false
 			for _, p := range g.positions {
 				if p == candidate {
-					alreadyOccupied = true
+					occupied = true
 					break
 				}
 			}
-			if alreadyOccupied {
+			if occupied {
 				continue
 			}
 
 			minDist := g.width * g.height
-
 			for _, p := range g.positions {
 				if d := manhattan(candidate, p); d < minDist {
 					minDist = d
 				}
+			}
+			if len(g.positions) == 0 {
+				minDist = 0
 			}
 			if minDist > bestDist {
 				bestDist = minDist
@@ -146,6 +175,7 @@ func (g *gameState) detonate(t trap) (hit []string, respawns map[string]position
 		}
 	}
 	for _, id := range hit {
+		delete(g.positions, id)
 		spawn, ok := g.bestSpawn()
 		if ok {
 			g.positions[id] = spawn

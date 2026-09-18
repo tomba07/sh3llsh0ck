@@ -44,7 +44,7 @@ func startServer(port int) {
 	grpcServer := grpc.NewServer()
 	s := &gameServer{
 		clients:     make(map[string]*gameClient),
-		game:        newGameState(10, 10),
+		game:        newGameState(30, 16),
 		scores:      make(map[string]int),
 		trapCancels: make(map[string]context.CancelFunc),
 	}
@@ -102,10 +102,20 @@ func (s *gameServer) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRes
 
 	fmt.Printf("%s joined\r\n", req.Name)
 
+	var walls []*pb.TilePos
+	for row := range s.game.height {
+		for col := range s.game.width {
+			if s.game.tiles[row][col] == tileWall {
+				walls = append(walls, &pb.TilePos{Col: int32(col), Row: int32(row)})
+			}
+		}
+	}
+
 	return &pb.JoinResponse{
 		PlayerId: req.Name,
 		Width:    int32(s.game.width),
 		Height:   int32(s.game.height),
+		Walls:    walls,
 	}, nil
 }
 

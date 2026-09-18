@@ -56,10 +56,16 @@ message JoinRequest {
   string name = 1;
 }
 
+message TilePos {
+  int32 col = 1;
+  int32 row = 2;
+}
+
 message JoinResponse {
   string player_id = 1;
   int32 width = 2;
   int32 height = 3;
+  repeated TilePos walls = 4;
 }
 
 message SendMessageRequest {

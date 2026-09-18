@@ -368,18 +368,71 @@ func (x *JoinRequest) GetName() string {
 	return ""
 }
 
+type TilePos struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Col           int32                  `protobuf:"varint,1,opt,name=col,proto3" json:"col,omitempty"`
+	Row           int32                  `protobuf:"varint,2,opt,name=row,proto3" json:"row,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TilePos) Reset() {
+	*x = TilePos{}
+	mi := &file_proto_chat_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TilePos) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TilePos) ProtoMessage() {}
+
+func (x *TilePos) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_chat_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TilePos.ProtoReflect.Descriptor instead.
+func (*TilePos) Descriptor() ([]byte, []int) {
+	return file_proto_chat_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *TilePos) GetCol() int32 {
+	if x != nil {
+		return x.Col
+	}
+	return 0
+}
+
+func (x *TilePos) GetRow() int32 {
+	if x != nil {
+		return x.Row
+	}
+	return 0
+}
+
 type JoinResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PlayerId      string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
 	Width         int32                  `protobuf:"varint,2,opt,name=width,proto3" json:"width,omitempty"`
 	Height        int32                  `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
+	Walls         []*TilePos             `protobuf:"bytes,4,rep,name=walls,proto3" json:"walls,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *JoinResponse) Reset() {
 	*x = JoinResponse{}
-	mi := &file_proto_chat_proto_msgTypes[3]
+	mi := &file_proto_chat_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -391,7 +444,7 @@ func (x *JoinResponse) String() string {
 func (*JoinResponse) ProtoMessage() {}
 
 func (x *JoinResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_chat_proto_msgTypes[3]
+	mi := &file_proto_chat_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -404,7 +457,7 @@ func (x *JoinResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinResponse.ProtoReflect.Descriptor instead.
 func (*JoinResponse) Descriptor() ([]byte, []int) {
-	return file_proto_chat_proto_rawDescGZIP(), []int{3}
+	return file_proto_chat_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *JoinResponse) GetPlayerId() string {
@@ -428,6 +481,13 @@ func (x *JoinResponse) GetHeight() int32 {
 	return 0
 }
 
+func (x *JoinResponse) GetWalls() []*TilePos {
+	if x != nil {
+		return x.Walls
+	}
+	return nil
+}
+
 type SendMessageRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PlayerId      string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
@@ -438,7 +498,7 @@ type SendMessageRequest struct {
 
 func (x *SendMessageRequest) Reset() {
 	*x = SendMessageRequest{}
-	mi := &file_proto_chat_proto_msgTypes[4]
+	mi := &file_proto_chat_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -450,7 +510,7 @@ func (x *SendMessageRequest) String() string {
 func (*SendMessageRequest) ProtoMessage() {}
 
 func (x *SendMessageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_chat_proto_msgTypes[4]
+	mi := &file_proto_chat_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -463,7 +523,7 @@ func (x *SendMessageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendMessageRequest.ProtoReflect.Descriptor instead.
 func (*SendMessageRequest) Descriptor() ([]byte, []int) {
-	return file_proto_chat_proto_rawDescGZIP(), []int{4}
+	return file_proto_chat_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *SendMessageRequest) GetPlayerId() string {
@@ -489,7 +549,7 @@ type SendMessageResponse struct {
 
 func (x *SendMessageResponse) Reset() {
 	*x = SendMessageResponse{}
-	mi := &file_proto_chat_proto_msgTypes[5]
+	mi := &file_proto_chat_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -501,7 +561,7 @@ func (x *SendMessageResponse) String() string {
 func (*SendMessageResponse) ProtoMessage() {}
 
 func (x *SendMessageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_chat_proto_msgTypes[5]
+	mi := &file_proto_chat_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -514,7 +574,7 @@ func (x *SendMessageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendMessageResponse.ProtoReflect.Descriptor instead.
 func (*SendMessageResponse) Descriptor() ([]byte, []int) {
-	return file_proto_chat_proto_rawDescGZIP(), []int{5}
+	return file_proto_chat_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *SendMessageResponse) GetOk() bool {
@@ -533,7 +593,7 @@ type LeaveRequest struct {
 
 func (x *LeaveRequest) Reset() {
 	*x = LeaveRequest{}
-	mi := &file_proto_chat_proto_msgTypes[6]
+	mi := &file_proto_chat_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -545,7 +605,7 @@ func (x *LeaveRequest) String() string {
 func (*LeaveRequest) ProtoMessage() {}
 
 func (x *LeaveRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_chat_proto_msgTypes[6]
+	mi := &file_proto_chat_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -558,7 +618,7 @@ func (x *LeaveRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LeaveRequest.ProtoReflect.Descriptor instead.
 func (*LeaveRequest) Descriptor() ([]byte, []int) {
-	return file_proto_chat_proto_rawDescGZIP(), []int{6}
+	return file_proto_chat_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *LeaveRequest) GetPlayerId() string {
@@ -577,7 +637,7 @@ type LeaveResponse struct {
 
 func (x *LeaveResponse) Reset() {
 	*x = LeaveResponse{}
-	mi := &file_proto_chat_proto_msgTypes[7]
+	mi := &file_proto_chat_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -589,7 +649,7 @@ func (x *LeaveResponse) String() string {
 func (*LeaveResponse) ProtoMessage() {}
 
 func (x *LeaveResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_chat_proto_msgTypes[7]
+	mi := &file_proto_chat_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -602,7 +662,7 @@ func (x *LeaveResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LeaveResponse.ProtoReflect.Descriptor instead.
 func (*LeaveResponse) Descriptor() ([]byte, []int) {
-	return file_proto_chat_proto_rawDescGZIP(), []int{7}
+	return file_proto_chat_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *LeaveResponse) GetOk() bool {
@@ -621,7 +681,7 @@ type SubscribeRequest struct {
 
 func (x *SubscribeRequest) Reset() {
 	*x = SubscribeRequest{}
-	mi := &file_proto_chat_proto_msgTypes[8]
+	mi := &file_proto_chat_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -633,7 +693,7 @@ func (x *SubscribeRequest) String() string {
 func (*SubscribeRequest) ProtoMessage() {}
 
 func (x *SubscribeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_chat_proto_msgTypes[8]
+	mi := &file_proto_chat_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -646,7 +706,7 @@ func (x *SubscribeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubscribeRequest.ProtoReflect.Descriptor instead.
 func (*SubscribeRequest) Descriptor() ([]byte, []int) {
-	return file_proto_chat_proto_rawDescGZIP(), []int{8}
+	return file_proto_chat_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *SubscribeRequest) GetPlayerId() string {
@@ -666,7 +726,7 @@ type MoveRequest struct {
 
 func (x *MoveRequest) Reset() {
 	*x = MoveRequest{}
-	mi := &file_proto_chat_proto_msgTypes[9]
+	mi := &file_proto_chat_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -678,7 +738,7 @@ func (x *MoveRequest) String() string {
 func (*MoveRequest) ProtoMessage() {}
 
 func (x *MoveRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_chat_proto_msgTypes[9]
+	mi := &file_proto_chat_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -691,7 +751,7 @@ func (x *MoveRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MoveRequest.ProtoReflect.Descriptor instead.
 func (*MoveRequest) Descriptor() ([]byte, []int) {
-	return file_proto_chat_proto_rawDescGZIP(), []int{9}
+	return file_proto_chat_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *MoveRequest) GetPlayerId() string {
@@ -717,7 +777,7 @@ type MoveResponse struct {
 
 func (x *MoveResponse) Reset() {
 	*x = MoveResponse{}
-	mi := &file_proto_chat_proto_msgTypes[10]
+	mi := &file_proto_chat_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -729,7 +789,7 @@ func (x *MoveResponse) String() string {
 func (*MoveResponse) ProtoMessage() {}
 
 func (x *MoveResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_chat_proto_msgTypes[10]
+	mi := &file_proto_chat_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -742,7 +802,7 @@ func (x *MoveResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MoveResponse.ProtoReflect.Descriptor instead.
 func (*MoveResponse) Descriptor() ([]byte, []int) {
-	return file_proto_chat_proto_rawDescGZIP(), []int{10}
+	return file_proto_chat_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *MoveResponse) GetOk() bool {
@@ -761,7 +821,7 @@ type PlaceTrapRequest struct {
 
 func (x *PlaceTrapRequest) Reset() {
 	*x = PlaceTrapRequest{}
-	mi := &file_proto_chat_proto_msgTypes[11]
+	mi := &file_proto_chat_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -773,7 +833,7 @@ func (x *PlaceTrapRequest) String() string {
 func (*PlaceTrapRequest) ProtoMessage() {}
 
 func (x *PlaceTrapRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_chat_proto_msgTypes[11]
+	mi := &file_proto_chat_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -786,7 +846,7 @@ func (x *PlaceTrapRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlaceTrapRequest.ProtoReflect.Descriptor instead.
 func (*PlaceTrapRequest) Descriptor() ([]byte, []int) {
-	return file_proto_chat_proto_rawDescGZIP(), []int{11}
+	return file_proto_chat_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *PlaceTrapRequest) GetPlayerId() string {
@@ -806,7 +866,7 @@ type PlaceTrapResponse struct {
 
 func (x *PlaceTrapResponse) Reset() {
 	*x = PlaceTrapResponse{}
-	mi := &file_proto_chat_proto_msgTypes[12]
+	mi := &file_proto_chat_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -818,7 +878,7 @@ func (x *PlaceTrapResponse) String() string {
 func (*PlaceTrapResponse) ProtoMessage() {}
 
 func (x *PlaceTrapResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_chat_proto_msgTypes[12]
+	mi := &file_proto_chat_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -831,7 +891,7 @@ func (x *PlaceTrapResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlaceTrapResponse.ProtoReflect.Descriptor instead.
 func (*PlaceTrapResponse) Descriptor() ([]byte, []int) {
-	return file_proto_chat_proto_rawDescGZIP(), []int{12}
+	return file_proto_chat_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *PlaceTrapResponse) GetOk() bool {
@@ -871,11 +931,15 @@ const file_proto_chat_proto_rawDesc = "" +
 	"\x06blasts\x18\n" +
 	" \x03(\v2\x0f.chat.TrapBlastR\x06blasts\"!\n" +
 	"\vJoinRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"Y\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"-\n" +
+	"\aTilePos\x12\x10\n" +
+	"\x03col\x18\x01 \x01(\x05R\x03col\x12\x10\n" +
+	"\x03row\x18\x02 \x01(\x05R\x03row\"~\n" +
 	"\fJoinResponse\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x14\n" +
 	"\x05width\x18\x02 \x01(\x05R\x05width\x12\x16\n" +
-	"\x06height\x18\x03 \x01(\x05R\x06height\"K\n" +
+	"\x06height\x18\x03 \x01(\x05R\x06height\x12#\n" +
+	"\x05walls\x18\x04 \x03(\v2\r.chat.TilePosR\x05walls\"K\n" +
 	"\x12SendMessageRequest\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"%\n" +
@@ -933,46 +997,48 @@ func file_proto_chat_proto_rawDescGZIP() []byte {
 }
 
 var file_proto_chat_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_proto_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_proto_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_proto_chat_proto_goTypes = []any{
 	(EventType)(0),              // 0: chat.EventType
 	(Direction)(0),              // 1: chat.Direction
 	(*TrapBlast)(nil),           // 2: chat.TrapBlast
 	(*Event)(nil),               // 3: chat.Event
 	(*JoinRequest)(nil),         // 4: chat.JoinRequest
-	(*JoinResponse)(nil),        // 5: chat.JoinResponse
-	(*SendMessageRequest)(nil),  // 6: chat.SendMessageRequest
-	(*SendMessageResponse)(nil), // 7: chat.SendMessageResponse
-	(*LeaveRequest)(nil),        // 8: chat.LeaveRequest
-	(*LeaveResponse)(nil),       // 9: chat.LeaveResponse
-	(*SubscribeRequest)(nil),    // 10: chat.SubscribeRequest
-	(*MoveRequest)(nil),         // 11: chat.MoveRequest
-	(*MoveResponse)(nil),        // 12: chat.MoveResponse
-	(*PlaceTrapRequest)(nil),    // 13: chat.PlaceTrapRequest
-	(*PlaceTrapResponse)(nil),   // 14: chat.PlaceTrapResponse
+	(*TilePos)(nil),             // 5: chat.TilePos
+	(*JoinResponse)(nil),        // 6: chat.JoinResponse
+	(*SendMessageRequest)(nil),  // 7: chat.SendMessageRequest
+	(*SendMessageResponse)(nil), // 8: chat.SendMessageResponse
+	(*LeaveRequest)(nil),        // 9: chat.LeaveRequest
+	(*LeaveResponse)(nil),       // 10: chat.LeaveResponse
+	(*SubscribeRequest)(nil),    // 11: chat.SubscribeRequest
+	(*MoveRequest)(nil),         // 12: chat.MoveRequest
+	(*MoveResponse)(nil),        // 13: chat.MoveResponse
+	(*PlaceTrapRequest)(nil),    // 14: chat.PlaceTrapRequest
+	(*PlaceTrapResponse)(nil),   // 15: chat.PlaceTrapResponse
 }
 var file_proto_chat_proto_depIdxs = []int32{
 	0,  // 0: chat.Event.type:type_name -> chat.EventType
 	1,  // 1: chat.Event.direction:type_name -> chat.Direction
 	2,  // 2: chat.Event.blasts:type_name -> chat.TrapBlast
-	1,  // 3: chat.MoveRequest.direction:type_name -> chat.Direction
-	4,  // 4: chat.ChatService.Join:input_type -> chat.JoinRequest
-	6,  // 5: chat.ChatService.SendMessage:input_type -> chat.SendMessageRequest
-	8,  // 6: chat.ChatService.Leave:input_type -> chat.LeaveRequest
-	11, // 7: chat.ChatService.Move:input_type -> chat.MoveRequest
-	13, // 8: chat.ChatService.PlaceTrap:input_type -> chat.PlaceTrapRequest
-	10, // 9: chat.ChatService.Subscribe:input_type -> chat.SubscribeRequest
-	5,  // 10: chat.ChatService.Join:output_type -> chat.JoinResponse
-	7,  // 11: chat.ChatService.SendMessage:output_type -> chat.SendMessageResponse
-	9,  // 12: chat.ChatService.Leave:output_type -> chat.LeaveResponse
-	12, // 13: chat.ChatService.Move:output_type -> chat.MoveResponse
-	14, // 14: chat.ChatService.PlaceTrap:output_type -> chat.PlaceTrapResponse
-	3,  // 15: chat.ChatService.Subscribe:output_type -> chat.Event
-	10, // [10:16] is the sub-list for method output_type
-	4,  // [4:10] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	5,  // 3: chat.JoinResponse.walls:type_name -> chat.TilePos
+	1,  // 4: chat.MoveRequest.direction:type_name -> chat.Direction
+	4,  // 5: chat.ChatService.Join:input_type -> chat.JoinRequest
+	7,  // 6: chat.ChatService.SendMessage:input_type -> chat.SendMessageRequest
+	9,  // 7: chat.ChatService.Leave:input_type -> chat.LeaveRequest
+	12, // 8: chat.ChatService.Move:input_type -> chat.MoveRequest
+	14, // 9: chat.ChatService.PlaceTrap:input_type -> chat.PlaceTrapRequest
+	11, // 10: chat.ChatService.Subscribe:input_type -> chat.SubscribeRequest
+	6,  // 11: chat.ChatService.Join:output_type -> chat.JoinResponse
+	8,  // 12: chat.ChatService.SendMessage:output_type -> chat.SendMessageResponse
+	10, // 13: chat.ChatService.Leave:output_type -> chat.LeaveResponse
+	13, // 14: chat.ChatService.Move:output_type -> chat.MoveResponse
+	15, // 15: chat.ChatService.PlaceTrap:output_type -> chat.PlaceTrapResponse
+	3,  // 16: chat.ChatService.Subscribe:output_type -> chat.Event
+	11, // [11:17] is the sub-list for method output_type
+	5,  // [5:11] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_proto_chat_proto_init() }
@@ -986,7 +1052,7 @@ func file_proto_chat_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_chat_proto_rawDesc), len(file_proto_chat_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   13,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

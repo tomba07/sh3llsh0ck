@@ -20,6 +20,7 @@ type gameClientView struct {
 	playerID   string
 	width      int
 	height     int
+	walls      map[position]bool
 	players    map[string]position
 	traps      map[string]trapView
 	blasts     map[string][]position
@@ -175,7 +176,7 @@ func (c *gameClientView) render() {
 
 	for row := 0; row < c.height; row++ {
 		for col := 0; col < c.width; col++ {
-			if col == 0 || col == c.width-1 || row == 0 || row == c.height-1 {
+			if c.walls[position{col: col, row: row}] {
 				fmt.Print(colorDarkGray + "#" + colorReset)
 				continue
 			}
@@ -288,6 +289,10 @@ func (c *gameClientView) Join(name string) error {
 	c.playerID = response.PlayerId
 	c.width = int(response.Width)
 	c.height = int(response.Height)
+	c.walls = make(map[position]bool, len(response.Walls))
+	for _, w := range response.Walls {
+		c.walls[position{col: int(w.Col), row: int(w.Row)}] = true
+	}
 	return nil
 }
 
