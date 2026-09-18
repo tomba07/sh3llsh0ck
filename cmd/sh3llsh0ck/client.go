@@ -10,6 +10,10 @@ import (
 	pb "github.com/tomba07/bombshell/proto"
 )
 
+type trapBlink struct {
+	cancel context.CancelFunc
+}
+
 type gameClientView struct {
 	mu         sync.Mutex
 	grpcClient pb.ChatServiceClient
@@ -20,7 +24,7 @@ type gameClientView struct {
 	traps      map[string]trapView
 	blasts     map[string][]position
 	scores     map[string]int
-	trapCancel map[string]context.CancelFunc
+	trapBlinks map[string]trapBlink
 }
 
 type trapView struct {
@@ -72,11 +76,11 @@ func (c *gameClientView) handleEvent(event *pb.Event) {
 
 	case pb.EventType_EVENT_TYPE_TRAP_PLACED:
 		trapID := event.TrapId
-		if cancel, ok := c.trapCancel[trapID]; ok {
-			cancel()
+		if b, ok := c.trapBlinks[trapID]; ok {
+			b.cancel()
 		}
 		ctx, cancel := context.WithCancel(context.Background())
-		c.trapCancel[trapID] = cancel
+		c.trapBlinks[trapID] = trapBlink{cancel: cancel}
 		c.traps[trapID] = trapView{
 			pos:   position{col: int(event.Col), row: int(event.Row)},
 			color: colorBrightMagenta,
@@ -126,30 +130,33 @@ func (c *gameClientView) handleEvent(event *pb.Event) {
 		c.scores[event.PlayerId] = int(event.Score)
 
 	case pb.EventType_EVENT_TYPE_TRAP_TRIGGERED:
-		trapID := event.TrapId
-		if cancel, ok := c.trapCancel[trapID]; ok {
-			cancel()
-			delete(c.trapCancel, trapID)
-		}
-		var tiles []position
 		radius := int(event.BlastRadius)
-		tiles = append(tiles, position{col: int(event.Col), row: int(event.Row)})
-		for i := 1; i <= radius; i++ {
-			tiles = append(tiles,
-				position{col: int(event.Col) + i, row: int(event.Row)},
-				position{col: int(event.Col) - i, row: int(event.Row)},
-				position{col: int(event.Col), row: int(event.Row) + i},
-				position{col: int(event.Col), row: int(event.Row) - i},
-			)
+		blastKey := fmt.Sprintf("chain-%d", time.Now().UnixNano())
+		var allTiles []position
+		for _, b := range event.Blasts {
+			if blink, ok := c.trapBlinks[b.TrapId]; ok {
+				blink.cancel()
+				delete(c.trapBlinks, b.TrapId)
+			}
+			delete(c.traps, b.TrapId)
+			col, row := int(b.Col), int(b.Row)
+			allTiles = append(allTiles, position{col: col, row: row})
+			for i := 1; i <= radius; i++ {
+				allTiles = append(allTiles,
+					position{col: col + i, row: row},
+					position{col: col - i, row: row},
+					position{col: col, row: row + i},
+					position{col: col, row: row - i},
+				)
+			}
 		}
-		delete(c.traps, trapID)
-		c.blasts[trapID] = tiles
+		c.blasts[blastKey] = allTiles
 		c.render()
 		c.mu.Unlock()
 		go func() {
 			time.Sleep(1000 * time.Millisecond)
 			c.mu.Lock()
-			delete(c.blasts, trapID)
+			delete(c.blasts, blastKey)
 			c.render()
 			c.mu.Unlock()
 		}()

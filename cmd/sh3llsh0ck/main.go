@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -40,7 +39,7 @@ func main() {
 		traps:      make(map[string]trapView),
 		blasts:     make(map[string][]position),
 		scores:     make(map[string]int),
-		trapCancel: make(map[string]context.CancelFunc),
+		trapBlinks: make(map[string]trapBlink),
 	}
 
 	name := readLine("Enter your name: ")

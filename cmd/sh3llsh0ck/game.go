@@ -125,8 +125,17 @@ func (g *gameState) placeTrap(playerID, trapID string) (trap, bool) {
 	return t, true
 }
 
-func (g *gameState) detonate(t trap) (hit []string, respawns map[string]position) {
+func (g *gameState) detonate(t trap) (hit []string, respawns map[string]position, chained []trap) {
 	delete(g.traps, t.id)
+
+	// collect traps caught in the blast before moving players
+	for _, other := range g.traps {
+		sameCol := other.col == t.col && abs(other.row-t.row) <= blastRadius
+		sameRow := other.row == t.row && abs(other.col-t.col) <= blastRadius
+		if sameCol || sameRow {
+			chained = append(chained, other)
+		}
+	}
 
 	respawns = make(map[string]position)
 	for id, p := range g.positions {

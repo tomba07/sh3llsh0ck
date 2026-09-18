@@ -1,18 +1,10 @@
-Exit improvement
+Better Map
 
-Server+Client Mode
+Exit improvement
 
 Remote Connections
 
 Respawn delay
 
-Score
-
-Multi-traps
-
 Power-ups
  - more traps, larger radius
-
-Stats
-
-Trap delays

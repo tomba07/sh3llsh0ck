@@ -32,6 +32,13 @@ service ChatService {
   rpc Subscribe(SubscribeRequest) returns (stream Event);
 }
 
+message TrapBlast {
+  string trap_id = 1;
+  string owner_id = 2;
+  int32 col = 3;
+  int32 row = 4;
+}
+
 message Event {
   EventType type = 1;
   string player_id = 2;
@@ -42,6 +49,7 @@ message Event {
   int32 blast_radius = 7;
   int32 score = 8;
   string trap_id = 9;
+  repeated TrapBlast blasts = 10;
 }
 
 message JoinRequest {
