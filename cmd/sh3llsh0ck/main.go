@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -22,6 +23,7 @@ func main() {
 		go startServer(50051)
 		time.Sleep(100 * time.Millisecond)
 		addr = "localhost:50051"
+		fmt.Printf("Server started. Others can join at %s:50051\n", localIP())
 	} else {
 		addr = readLine("Server address [localhost:50051]: ")
 		if addr == "" {
@@ -96,6 +98,15 @@ func main() {
 			}
 		}
 	}
+}
+
+func localIP() string {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return "unknown"
+	}
+	defer conn.Close()
+	return conn.LocalAddr().(*net.UDPAddr).IP.String()
 }
 
 func readLine(prompt string) string {

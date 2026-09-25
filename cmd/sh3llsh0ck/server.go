@@ -68,10 +68,7 @@ func (s *gameServer) Join(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRes
 		messages: make(chan *pb.Event, 10),
 	}
 
-	clients := make([]*gameClient, 0, len(s.clients))
-	for _, c := range s.clients {
-		clients = append(clients, c)
-	}
+	clients := s.allClients()
 
 	best, ok := s.game.bestSpawn()
 	if !ok {
@@ -178,10 +175,7 @@ func (s *gameServer) Move(ctx context.Context, req *pb.MoveRequest) (*pb.MoveRes
 
 	s.game.positions[req.PlayerId] = pos
 
-	clients := make([]*gameClient, 0, len(s.clients))
-	for _, c := range s.clients {
-		clients = append(clients, c)
-	}
+	clients := s.allClients()
 	s.mu.Unlock()
 
 	broadcast(clients, &pb.Event{
@@ -198,10 +192,7 @@ func (s *gameServer) Move(ctx context.Context, req *pb.MoveRequest) (*pb.MoveRes
 func (s *gameServer) SendMessage(ctx context.Context, req *pb.SendMessageRequest) (*pb.SendMessageResponse, error) {
 	s.mu.Lock()
 	_, joined := s.clients[req.PlayerId]
-	clients := make([]*gameClient, 0, len(s.clients))
-	for _, c := range s.clients {
-		clients = append(clients, c)
-	}
+	clients := s.allClients()
 	s.mu.Unlock()
 
 	if !joined {
@@ -229,10 +220,7 @@ func (s *gameServer) Leave(ctx context.Context, req *pb.LeaveRequest) (*pb.Leave
 	delete(s.clients, req.PlayerId)
 	delete(s.game.positions, req.PlayerId)
 
-	clients := make([]*gameClient, 0, len(s.clients))
-	for _, c := range s.clients {
-		clients = append(clients, c)
-	}
+	clients := s.allClients()
 	s.mu.Unlock()
 
 	broadcast(clients, &pb.Event{
@@ -293,10 +281,7 @@ func (s *gameServer) scheduleTrap(t trap) {
 
 		s.mu.Lock()
 		delete(s.trapCancels, t.id)
-		clients := make([]*gameClient, 0, len(s.clients))
-		for _, c := range s.clients {
-			clients = append(clients, c)
-		}
+		clients := s.allClients()
 		// Process the full chain and collect all blasts, hits, and scores.
 		queue := []trap{t}
 		var allBlasts []*pb.TrapBlast
@@ -368,6 +353,14 @@ func (s *gameServer) scheduleTrap(t trap) {
 		}
 		s.mu.Unlock()
 	}()
+}
+
+func (s *gameServer) allClients() []*gameClient {
+	clients := make([]*gameClient, 0, len(s.clients))
+	for _, c := range s.clients {
+		clients = append(clients, c)
+	}
+	return clients
 }
 
 func broadcast(clients []*gameClient, event *pb.Event) {

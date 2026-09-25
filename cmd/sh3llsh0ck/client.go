@@ -89,29 +89,19 @@ func (c *gameClientView) handleEvent(event *pb.Event) {
 		c.mu.Unlock()
 		go func(tid string) {
 			blink := func(d time.Duration) bool {
-				time.Sleep(d)
-				c.mu.Lock()
-				if ctx.Err() != nil {
+				for _, color := range []string{colorBrightYellow, colorBrightMagenta} {
+					time.Sleep(d)
+					c.mu.Lock()
+					if ctx.Err() != nil {
+						c.mu.Unlock()
+						return false
+					}
+					t := c.traps[tid]
+					t.color = color
+					c.traps[tid] = t
+					c.render()
 					c.mu.Unlock()
-					return false
 				}
-				t := c.traps[tid]
-				t.color = colorBrightYellow
-				c.traps[tid] = t
-				c.render()
-				c.mu.Unlock()
-
-				time.Sleep(d)
-				c.mu.Lock()
-				if ctx.Err() != nil {
-					c.mu.Unlock()
-					return false
-				}
-				t = c.traps[tid]
-				t.color = colorBrightMagenta
-				c.traps[tid] = t
-				c.render()
-				c.mu.Unlock()
 				return true
 			}
 			for range 3 {
@@ -170,62 +160,50 @@ func (c *gameClientView) handleEvent(event *pb.Event) {
 
 func (c *gameClientView) render() {
 	top := c.topScorers(3)
-	boardWidth := c.width // one char per cell
+	boardWidth := c.width
+
+	// Build per-cell lookup maps once instead of scanning inside the grid loop.
+	trapAt := make(map[position]trapView, len(c.traps))
+	for _, t := range c.traps {
+		trapAt[t.pos] = t
+	}
+	blastAt := make(map[position]bool)
+	for _, tiles := range c.blasts {
+		for _, t := range tiles {
+			blastAt[t] = true
+		}
+	}
+	playerAt := make(map[position]string, len(c.players))
+	for id, pos := range c.players {
+		playerAt[pos] = id
+	}
 
 	fmt.Print("\033[H")
 
 	for row := 0; row < c.height; row++ {
 		for col := 0; col < c.width; col++ {
-			if c.walls[position{col: col, row: row}] {
+			p := position{col: col, row: row}
+			if c.walls[p] {
 				fmt.Print(colorDarkGray + "#" + colorReset)
 				continue
 			}
-
-			trapHere := false
-			for _, t := range c.traps {
-				if t.pos.col == col && t.pos.row == row {
-					fmt.Print(t.color + "*" + colorReset)
-					trapHere = true
-					break
-				}
-			}
-			if trapHere {
+			if t, ok := trapAt[p]; ok {
+				fmt.Print(t.color + "*" + colorReset)
 				continue
 			}
-
-			blastHere := false
-			for _, tiles := range c.blasts {
-				for _, t := range tiles {
-					if t.col == col && t.row == row {
-						fmt.Print(colorBrightRed + "X" + colorReset)
-						blastHere = true
-						break
-					}
-				}
-				if blastHere {
-					break
-				}
-			}
-			if blastHere {
+			if blastAt[p] {
+				fmt.Print(colorBrightRed + "X" + colorReset)
 				continue
 			}
-
-			playerHere := false
-			for playerID, pos := range c.players {
-				if pos.col == col && pos.row == row {
-					if playerID == c.playerID {
-						fmt.Print(colorBrightGreen + "@" + colorReset)
-					} else {
-						fmt.Print(colorBrightYellow + "P" + colorReset)
-					}
-					playerHere = true
-					break
+			if id, ok := playerAt[p]; ok {
+				if id == c.playerID {
+					fmt.Print(colorBrightGreen + "@" + colorReset)
+				} else {
+					fmt.Print(colorBrightYellow + "P" + colorReset)
 				}
+				continue
 			}
-
-			if !playerHere {
-				fmt.Print(colorDarkGray + "." + colorReset)
-			}
+			fmt.Print(colorDarkGray + "." + colorReset)
 		}
 
 		// leaderboard column to the right

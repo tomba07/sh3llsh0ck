@@ -156,21 +156,17 @@ func (g *gameState) placeTrap(playerID, trapID string) (trap, bool) {
 
 func (g *gameState) detonate(t trap) (hit []string, respawns map[string]position, chained []trap) {
 	delete(g.traps, t.id)
+	tPos := position{col: t.col, row: t.row}
 
-	// collect traps caught in the blast before moving players
 	for _, other := range g.traps {
-		sameCol := other.col == t.col && abs(other.row-t.row) <= blastRadius
-		sameRow := other.row == t.row && abs(other.col-t.col) <= blastRadius
-		if sameCol || sameRow {
+		if inCross(tPos, position{col: other.col, row: other.row}, blastRadius) {
 			chained = append(chained, other)
 		}
 	}
 
 	respawns = make(map[string]position)
 	for id, p := range g.positions {
-		sameCol := p.col == t.col && abs(p.row-t.row) <= blastRadius
-		sameRow := p.row == t.row && abs(p.col-t.col) <= blastRadius
-		if sameCol || sameRow {
+		if inCross(tPos, p, blastRadius) {
 			hit = append(hit, id)
 		}
 	}
@@ -183,6 +179,12 @@ func (g *gameState) detonate(t trap) (hit []string, respawns map[string]position
 		}
 	}
 	return
+}
+
+func inCross(center, p position, radius int) bool {
+	sameCol := p.col == center.col && abs(p.row-center.row) <= radius
+	sameRow := p.row == center.row && abs(p.col-center.col) <= radius
+	return sameCol || sameRow
 }
 
 func manhattan(a, b position) int {
